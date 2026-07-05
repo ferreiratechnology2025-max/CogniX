@@ -1,0 +1,20 @@
+id: TC-001-boot
+name: Boot Opcode - System Initialization
+description: Validate that BOOT initializes the system correctly
+
+preconditions:
+  - State manager available
+  - Program file exists
+
+procedure:
+  - Execute BOOT opcode
+  - Verify session created
+  - Verify R0 set
+
+expected:
+  status: "OK"
+  state:
+    r0_session: "pattern:YYYY-MM-DD-HH-MM"
+  exit_code: 0
+
+tags: [boot, initialization]

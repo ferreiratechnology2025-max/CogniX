@@ -1,0 +1,27 @@
+id: TC-007-complete-flow
+name: Complete Flow - Full Program
+description: Validate that the complete program flow executes correctly
+
+preconditions:
+  - All resources exist
+  - State is clean
+
+procedure:
+  - BOOT
+  - LOAD project-cognix
+  - VALIDATE project-cognix
+  - EXEC
+  - COMMIT
+  - EXIT
+
+expected:
+  status: "OK"
+  boot_status: "OK"
+  load_status: "OK"
+  validate_status: "OK"
+  exec_status: "OK"
+  commit_status: "OK"
+  exit_status: "OK"
+  exit_code: 0
+
+tags: [flow, complete]

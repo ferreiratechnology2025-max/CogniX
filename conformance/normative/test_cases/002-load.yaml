@@ -1,0 +1,20 @@
+id: TC-002-load
+name: Load Opcode - Resource Loading
+description: Validate that LOAD correctly loads a resource
+
+preconditions:
+  - Resource project-cognix exists
+  - Resource dependencies exist
+
+procedure:
+  - LOAD project-cognix
+  - Verify resource loaded
+  - Verify dependencies loaded
+
+expected:
+  status: "OK"
+  resource: "project-cognix"
+  dependencies: ["skill-markdown", "skill-kos", "skill-git"]
+  exit_code: 0
+
+tags: [load, resource]

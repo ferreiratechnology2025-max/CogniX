@@ -1,0 +1,20 @@
+id: TC-004-exec
+name: Exec Opcode - Task Execution
+description: Validate that EXEC executes the current task
+
+preconditions:
+  - R2 [NEXT_ACT] is defined
+
+procedure:
+  - EXEC
+  - Verify R1 updated
+  - Verify R7 updated
+
+expected:
+  status: "OK"
+  state:
+    r1_last_act: "pattern:*"
+    r7_timestamp: "pattern:YYYY-MM-DDTHH:MM:SSZ"
+  exit_code: 0
+
+tags: [exec, task]

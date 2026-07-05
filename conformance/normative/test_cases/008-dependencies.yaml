@@ -1,0 +1,19 @@
+id: TC-008-dependencies
+name: Dependencies - Recursive Loading
+description: Validate that dependencies are loaded recursively
+
+preconditions:
+  - Resource with dependencies exists
+
+procedure:
+  - LOAD project-cognix
+  - Verify skill-markdown loaded
+  - Verify skill-kos loaded
+  - Verify skill-git loaded
+
+expected:
+  status: "OK"
+  loaded_count: 4
+  exit_code: 0
+
+tags: [dependencies, recursive]

@@ -1,0 +1,19 @@
+id: TC-006-exit
+name: Exit Opcode - Session End
+description: Validate that EXIT ends the session correctly
+
+preconditions:
+  - Session is active
+
+procedure:
+  - EXIT
+  - Verify state saved
+  - Verify R6 health OK
+
+expected:
+  status: "OK"
+  state:
+    r6_health: "OK"
+  exit_code: 0
+
+tags: [exit, session]

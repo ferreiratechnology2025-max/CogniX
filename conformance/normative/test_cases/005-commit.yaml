@@ -1,0 +1,19 @@
+id: TC-005-commit
+name: Commit Opcode - State Persistence
+description: Validate that COMMIT persists changes correctly
+
+preconditions:
+  - Resource has been modified
+
+procedure:
+  - COMMIT
+  - Verify R3 contains only delta
+  - Verify R7 updated
+
+expected:
+  status: "OK"
+  state:
+    r7_timestamp: "pattern:YYYY-MM-DDTHH:MM:SSZ"
+  exit_code: 0
+
+tags: [commit, persistence]

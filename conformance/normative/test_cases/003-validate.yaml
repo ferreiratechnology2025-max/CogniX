@@ -1,0 +1,20 @@
+id: TC-003-validate
+name: Validate Opcode - Resource Structure
+description: Validate that VALIDATE correctly checks resource structure
+
+preconditions:
+  - Resource project-cognix exists
+  - Resource has valid structure
+
+procedure:
+  - LOAD project-cognix
+  - VALIDATE project-cognix
+
+expected:
+  status: "OK"
+  resource: "project-cognix"
+  valid: true
+  errors: []
+  exit_code: 0
+
+tags: [validate, resource]
