@@ -53,7 +53,7 @@ class AEPKernelSQLite:
         if not resource:
             return {
                 "status": "FAIL",
-                "error": f"Resource '{resource_id}' not found in database"
+                "error": f"Resource '{resource_id}' not found"
             }
         
         # Load dependencies
