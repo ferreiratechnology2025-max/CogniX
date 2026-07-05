@@ -30,6 +30,18 @@ Em vez de o agente descobrir o contexto (crawler), o contexto define o programa 
 
 ---
 
+## Specification Documents
+
+| Document | Description |
+|----------|-------------|
+| [AEP-0001](AEP/AEP-0001-core.md) | Core Protocol |
+| [AEP-0002](AEP/AEP-0002-resource.md) | Resource Specification |
+| [AEP-0003](AEP/AEP-0003-isa.md) | Kernel ISA |
+| [AEP-0004](AEP/AEP-0004-conformance.md) | Conformance Tests |
+| [AEP-0005](AEP/AEP-0005-lifecycle.md) | Resource Lifecycle |
+
+---
+
 ## Instalação
 
 ### 1. Clone o repositório
