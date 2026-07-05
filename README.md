@@ -2,6 +2,8 @@
 
 **Kernel mínimo para agentes de IA baseado em Markdown puro.**
 
+---
+
 ## Visão Geral
 
 KOS é um sistema operacional de conhecimento que transforma seu repositório em um ambiente executável para agentes de IA. Baseado em:
@@ -10,12 +12,15 @@ KOS é um sistema operacional de conhecimento que transforma seu repositório em
 - **Protocolo universal de Resources** — todos os artefatos seguem o mesmo padrão
 - **ISA de 6 opcodes** — boot, load, validate, exec, commit, exit
 - **Microkernel imutável** — o kernel nunca muda, apenas o programa e os resources
+- **Estado mínimo** — registradores mantêm apenas o delta da sessão atual
 
 ## Filosofia
 
 > **"O contexto é um programa declarativo que a IA interpreta."**
 
 Em vez de o agente descobrir o contexto (crawler), o contexto define o programa (processor). Isso reduz o consumo de tokens, elimina ambiguidades e torna o comportamento determinístico.
+
+---
 
 ## Instalação
 
@@ -30,6 +35,7 @@ O KOS já vem com:
 - Kernel (4 arquivos em KERNEL/)
 - Resources de exemplo (em RESOURCES/)
 - Skills básicas (markdown, git, kos)
+- Templates para novos Resources
 
 ### 3. Configure seu projeto
 Edite `KERNEL/STATE.md` para apontar para seu projeto:
@@ -37,6 +43,8 @@ Edite `KERNEL/STATE.md` para apontar para seu projeto:
 ACTIVE_PROJECT: seu-projeto-id
 ACTIVE_STATUS: seu-status-id
 ```
+
+---
 
 ## Uso Básico
 
@@ -77,8 +85,13 @@ VALIDATE [ACTIVE_PROJECT]
 VALIDATE [ACTIVE_STATUS]
 EXEC
 COMMIT
+  ├── Atualiza R0-R7
+  ├── Limpa R3 (apenas arquivos desta sessão)
+  └── Persiste alterações
 EXIT
 ```
+
+---
 
 ## Arquitetura
 
@@ -110,6 +123,22 @@ Todos os artefatos seguem o mesmo protocolo:
 - **rule**: Regra do projeto
 - **template**: Template para novos Resources
 
+### Registradores de Estado (R0-R7)
+| Registrador | Função | Regra |
+|-------------|--------|-------|
+| R0 [SESSION] | Identificador da sessão | Gerado a cada BOOT |
+| R1 [LAST_ACT] | Última ação realizada | Atualizado no COMMIT |
+| R2 [NEXT_ACT] | Próxima ação planejada | Definido pelo agente |
+| R3 [MODIFIED] | Arquivos modificados nesta sessão | **APENAS delta da sessão atual** |
+| R4 [BLOCKERS] | Bloqueios atuais | Atualizado quando necessário |
+| R5 [ACTIVE_SK] | Skill ativa | Definido pelo agente |
+| R6 [HEALTH] | Saúde do sistema | OK ou FALHA |
+| R7 [TIMESTAMP] | Timestamp da sessão | Atualizado no COMMIT |
+
+**Importante:** R3 [MODIFIED] deve conter APENAS os arquivos modificados na sessão atual. Histórico pertence ao Git, não ao estado.
+
+---
+
 ## Exemplo de Sessão
 
 ```bash
@@ -122,12 +151,43 @@ claude "Leia AGENTS.md e execute a tarefa"
 # LOAD status-cognix → Carrega status
 # VALIDATE → Verifica estrutura
 # EXEC → Executa tarefa (R2 - NEXT_ACT)
-# COMMIT → Persiste alterações
+# COMMIT → Persiste alterações, limpa R3
 # EXIT → Encerra
 
 # 3. Resultado
-# Recursos atualizados, novo estado salvo
+# Recursos atualizados, R3 contém apenas delta da sessão
 ```
+
+---
+
+## Recursos Disponíveis
+
+### Projetos
+- `project-cognix` — Projeto de referência do KOS
+
+### Status
+- `status-cognix` — Estado atual do CogniX
+
+### Skills
+- `skill-markdown` — Sintaxe e boas práticas de Markdown
+- `skill-kos` — Como operar o KOS
+- `skill-git` — Comandos e fluxos Git
+
+### ADRs
+- `adr-001-kernel-design` — Decisão de design do microkernel
+
+### Incidentes
+- `incident-001-validate-failure` — Falha de validação + vacina
+
+### Templates
+- `template-project` — Template para projetos
+- `template-status` — Template para status
+- `template-skill` — Template para skills
+
+### Regras
+- `rule-r3-lifecycle` — Ciclo de vida do R3 [MODIFIED]
+
+---
 
 ## Próximos Passos
 
@@ -136,14 +196,26 @@ claude "Leia AGENTS.md e execute a tarefa"
 3. Explore os Resources em `RESOURCES/`
 4. Crie seu primeiro projeto com KOS
 
+---
+
 ## Licença
 
 MIT
 
+---
+
 ## Status do Projeto
 
-✅ Kernel v6.0 instalado  
-✅ Protocolo de Resources validado  
-✅ Skills básicas disponíveis  
-✅ Fluxo completo testado  
-✅ Documentação completa
+| Fase | Status |
+|------|--------|
+| Estrutura Base | ✅ |
+| Resources Iniciais | ✅ |
+| Skills Complementares | ✅ |
+| Teste Completo | ✅ |
+| Documentação | ✅ |
+| Integração Git | ✅ |
+| Agentes Reais | ✅ |
+| Novos Resources | ✅ |
+| Correção R3 | ✅ |
+
+**KOS v6.0 — Pronto para uso em projetos reais.**
