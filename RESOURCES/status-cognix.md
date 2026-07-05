@@ -7,11 +7,11 @@ status: active
 ---
 # STATE REGISTERS — CogniX
 
-R0 [SESSION] = 2026-07-04-15-30
-R1 [LAST_ACT] = Fluxo completo testado
-R2 [NEXT_ACT] = Configurar Git e commit inicial
-R3 [MODIFIED] = KERNEL/*, AGENTS.md, KERNEL/STATE.md
+R0 [SESSION] = 2026-07-04-16-00
+R1 [LAST_ACT] = Teste com Claude Code realizado
+R2 [NEXT_ACT] = Criar Resources adicionais (ADRs, Incidentes, Templates)
+R3 [MODIFIED] = RESOURCES/status-cognix.md, RESOURCES/report-agents.md
 R4 [BLOCKERS] = Nenhum
 R5 [ACTIVE_SK] = skill-kos
 R6 [HEALTH] = OK
-R7 [TIMESTAMP] = 2026-07-04T22:40:00Z
+R7 [TIMESTAMP] = 2026-07-04T22:50:00Z
