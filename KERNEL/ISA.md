@@ -23,9 +23,35 @@ Executa a tarefa definida no PROGRAM
 
 ### COMMIT
 Persiste alterações e classifica novo conhecimento
-- Atualiza Resources existentes
-- Cria novos Resources quando necessário
-- Atualiza STATE.md
+
+**Comportamento:**
+1. Atualiza Resources existentes (ex: STATUS.md)
+2. **Limpa R3 [MODIFIED]** → substitui pelo delta da sessão atual
+3. Cria novos Resources quando necessário
+4. Atualiza STATE.md
+
+**Regras:**
+- R3 [MODIFIED] deve conter APENAS os arquivos modificados nesta sessão
+- R1 [LAST_ACT] deve refletir a ação atual
+- R7 [TIMESTAMP] deve ser atualizado
+- R3 NUNCA deve acumular histórico (histórico fica no Git)
+
+**Exemplo correto:**
+```yaml
+# Antes do COMMIT
+R3 [MODIFIED] = KERNEL/STATE.md
+
+# Durante COMMIT - agente modificou status-cognix.md
+
+# Após COMMIT (correto)
+R3 [MODIFIED] = RESOURCES/status-cognix.md
+```
+
+**Exemplo incorreto (acúmulo):**
+```yaml
+# Após COMMIT (errado)
+R3 [MODIFIED] = KERNEL/STATE.md, RESOURCES/report-test.md, RESOURCES/status-cognix.md
+```
 
 ### EXIT
 Encerra a sessão

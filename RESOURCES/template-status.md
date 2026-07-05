@@ -1,11 +1,16 @@
 ---
 type: template
 id: template-status
-version: 1.0.0
+version: 1.0.1
 depends: []
 status: active
 ---
 # TEMPLATE: Status Resource
+
+## REGRAS
+- R3 [MODIFIED] deve conter APENAS o delta da sessão atual
+- NUNCA acumule histórico em R3
+- Use Git para histórico, não R3
 
 ## USO
 Copie este template para criar um novo Status Resource.
@@ -24,7 +29,7 @@ status: draft
 R0 [SESSION] = [YYYY-MM-DD-HH-MM]
 R1 [LAST_ACT] = [Última ação realizada]
 R2 [NEXT_ACT] = [Próxima ação planejada]
-R3 [MODIFIED] = [Arquivos modificados]
+R3 [MODIFIED] = [APENAS arquivos desta sessão]
 R4 [BLOCKERS] = [Bloqueios atuais]
 R5 [ACTIVE_SK] = [Skill ativa]
 R6 [HEALTH] = OK
