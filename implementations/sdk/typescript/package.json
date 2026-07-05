@@ -1,0 +1,17 @@
+{
+  "name": "aep-sdk",
+  "version": "1.0.0",
+  "description": "AEP SDK for TypeScript - Agent Execution Protocol",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "echo \"No tests yet\""
+  },
+  "keywords": ["aep", "agent", "protocol", "sdk"],
+  "author": "KOS Contributors",
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

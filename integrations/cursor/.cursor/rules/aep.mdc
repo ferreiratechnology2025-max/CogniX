@@ -1,0 +1,56 @@
+# AEP Rules for Cursor
+
+This file defines how Cursor should interact with AEP projects.
+
+## Project Structure
+
+When working in an AEP project, follow this structure:
+
+```
+KERNEL/
+  STATE.md      # Current state
+  PROGRAM.md    # Execution flow
+  BOOT.md       # Boot sequence
+  ISA.md        # Instruction set
+
+RESOURCES/
+  *.md          # Resource files
+
+AEP/
+  AEP-*.md      # Protocol specifications
+```
+
+## Resource Format
+
+All resources must follow this format:
+
+```yaml
+---
+type: project|status|skill|adr|incident|rule|template
+id: unique-id
+version: X.Y.Z
+depends: [dep1, dep2]
+status: draft|review|active|deprecated|archived
+---
+# Content here
+```
+
+## State Registers
+
+State is maintained in R0-R7:
+
+- R0: Session ID
+- R1: Last action
+- R2: Next action
+- R3: Modified files (delta only)
+- R4: Blockers
+- R5: Active skill
+- R6: Health (OK/FAIL)
+- R7: Timestamp
+
+## Rules
+
+1. Never modify KERNEL/ files directly
+2. Always validate resources before use
+3. Keep R3 as delta only (no history)
+4. Use Git for history, not state
