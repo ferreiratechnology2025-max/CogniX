@@ -1,0 +1,15 @@
+id: TC-004-exec
+name: EXEC — Task Execution
+
+procedure:
+  - opcode: BOOT
+    args: {}
+  - opcode: EXEC
+    args: {}
+    expect:
+      status: OK
+      watchdog_remaining: 4
+
+expected:
+  decrements_watchdog: true
+  reads_R2: true

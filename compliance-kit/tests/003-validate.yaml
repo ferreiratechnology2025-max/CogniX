@@ -1,0 +1,24 @@
+id: TC-003-validate
+name: VALIDATE — Resource Validation
+
+procedure:
+  - opcode: BOOT
+  - opcode: LOAD
+    args:
+      resource_id: "valid-resource"
+  - opcode: VALIDATE
+    args:
+      resource_id: "valid-resource"
+    expect:
+      status: OK
+      valid: true
+  - opcode: VALIDATE
+    args:
+      resource_id: "invalid-resource"
+    expect:
+      status: FAIL
+      valid: false
+
+expected:
+  valid_resource: OK
+  invalid_resource: FAIL

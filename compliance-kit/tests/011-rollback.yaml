@@ -1,0 +1,21 @@
+id: TC-011-rollback
+name: ROLLBACK — ACID Rollback on Failure
+
+procedure:
+  - opcode: BOOT
+  - opcode: COMMIT
+    args:
+      modified_files: ["invalid-resource.md"]
+    expect:
+      status: FAIL
+      rollback: true
+  - opcode: COMMIT
+    args: {}
+    expect:
+      status: OK
+
+expected:
+  R4_error_code: "ERR_AEP_0002_VALIDATION"
+  R4_trace: "<error-message>"
+  R7_value: "ROLLBACK_EXECUTED"
+  state_restored: true

@@ -1,0 +1,16 @@
+id: TC-008-dependencies
+name: DEPENDENCIES — Dependency Resolution
+
+procedure:
+  - opcode: BOOT
+  - opcode: LOAD
+    args:
+      resource_id: "resource-with-deps"
+    expect:
+      status: OK
+      dependencies: ["dep-a", "dep-b"]
+      loaded_count: 3
+
+expected:
+  loads_dependencies: true
+  fails_on_missing: true

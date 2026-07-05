@@ -1,0 +1,14 @@
+id: TC-006-exit
+name: EXIT — Session Termination
+
+procedure:
+  - opcode: BOOT
+  - opcode: EXIT
+    expect:
+      status: OK
+      session: "<from-boot>"
+      yield_history: []
+
+expected:
+  session_terminated: true
+  health_check: true

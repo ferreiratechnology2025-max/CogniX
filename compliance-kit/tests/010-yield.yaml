@@ -1,0 +1,24 @@
+id: TC-010-yield
+name: YIELD — Watchdog Extension
+
+procedure:
+  - opcode: BOOT
+  - opcode: YIELD
+    args:
+      reason: "Complex task requires more cycles"
+      requested_cycles: 3
+    expect:
+      status: OK
+      approved: 3
+      new_watchdog: 8
+  - opcode: YIELD
+    args:
+      reason: "Exceed limit"
+      requested_cycles: 20
+    expect:
+      status: FAIL
+
+expected:
+  extends_watchdog: true
+  respects_global_limit: true
+  tracks_history: true

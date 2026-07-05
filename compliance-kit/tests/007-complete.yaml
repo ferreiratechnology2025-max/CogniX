@@ -1,0 +1,19 @@
+id: TC-007-complete
+name: COMPLETE — Full Program Execution
+
+procedure:
+  - opcode: BOOT
+  - opcode: LOAD
+    args:
+      resource_id: "valid-resource"
+  - opcode: VALIDATE
+    args:
+      resource_id: "valid-resource"
+  - opcode: EXEC
+  - opcode: COMMIT
+  - opcode: EXIT
+
+expected:
+  all_opcodes_executed: true
+  no_failures: true
+  final_status: OK

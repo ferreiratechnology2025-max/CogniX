@@ -1,0 +1,20 @@
+id: TC-009-error-handling
+name: ERROR-HANDLING — Structured Error Output
+
+procedure:
+  - opcode: BOOT
+  - opcode: LOAD
+    args:
+      resource_id: "nonexistent"
+    expect:
+      status: FAIL
+      error: "<message>"
+  - opcode: COMMIT
+    expect:
+      status: FAIL
+      rollback: true
+
+expected:
+  R4_populated: true
+  error_code_present: true
+  trace_present: true

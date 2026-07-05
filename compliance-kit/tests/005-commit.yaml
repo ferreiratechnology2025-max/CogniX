@@ -1,0 +1,18 @@
+id: TC-005-commit
+name: COMMIT — State Persistence
+
+procedure:
+  - opcode: BOOT
+  - opcode: EXEC
+  - opcode: COMMIT
+    args:
+      modified_files: ["test-resource.md"]
+    expect:
+      status: OK
+      state:
+        R6: "OK"
+
+expected:
+  persists_state: true
+  clears_R4: true
+  updates_R7: true

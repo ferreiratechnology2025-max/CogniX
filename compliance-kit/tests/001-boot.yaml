@@ -1,0 +1,18 @@
+id: TC-001-boot
+name: BOOT — System Initialization
+
+procedure:
+  - opcode: BOOT
+    args: {}
+    expect:
+      status: OK
+      session: "<generated>"
+      state:
+        R0: "<session-id>"
+        R1: "5"
+        R6: "OK"
+
+expected:
+  status: OK
+  registers_initialized: true
+  session_created: true

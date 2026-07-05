@@ -1,0 +1,22 @@
+id: TC-002-load
+name: LOAD — Resource Loading
+
+procedure:
+  - opcode: BOOT
+  - opcode: LOAD
+    args:
+      resource_id: "valid-resource"
+    expect:
+      status: OK
+      resource: "valid-resource"
+      loaded_count: 1
+  - opcode: LOAD
+    args:
+      resource_id: "nonexistent-resource"
+    expect:
+      status: FAIL
+      error_code: "ERR_AEP_0003_E001"
+
+expected:
+  valid_load: OK
+  missing_load: FAIL
