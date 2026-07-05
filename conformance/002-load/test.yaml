@@ -1,0 +1,13 @@
+id: TC-002-load
+name: Load Resource
+description: Validate LOAD opcode loads Resource and dependencies
+status: draft
+setup:
+  - project-cognix Resource exists
+  - Dependencies exist
+procedure:
+  - LOAD project-cognix
+expected:
+  - Resource loaded
+  - Dependencies loaded
+  - Exit code 0

@@ -1,0 +1,14 @@
+id: TC-005-commit
+name: Commit Changes
+description: Validate COMMIT opcode persists changes and clears R3
+status: draft
+setup:
+  - Resource modified
+procedure:
+  - COMMIT
+expected:
+  - Resources persisted
+  - R3 cleared to delta only
+  - R1 [LAST_ACT] updated
+  - R7 [TIMESTAMP] updated
+  - Exit code 0

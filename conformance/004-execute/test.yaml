@@ -1,0 +1,12 @@
+id: TC-004-execute
+name: Execute Task
+description: Validate EXEC opcode executes R2 [NEXT_ACT]
+status: draft
+setup:
+  - R2 [NEXT_ACT] defined
+procedure:
+  - EXEC
+expected:
+  - Task executed
+  - R1 [LAST_ACT] updated
+  - Exit code 0

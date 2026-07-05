@@ -1,0 +1,10 @@
+id: TC-006-exit
+name: Exit Session
+description: Validate EXIT opcode saves state and ends session
+status: draft
+procedure:
+  - EXIT
+expected:
+  - STATE saved
+  - Session ended
+  - Exit code 0

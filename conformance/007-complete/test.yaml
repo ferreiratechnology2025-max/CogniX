@@ -1,0 +1,11 @@
+id: TC-007-complete
+name: Complete Flow
+description: Validate full PROGRAM flow executes all opcodes
+status: draft
+procedure:
+  - Execute full PROGRAM flow
+expected:
+  - All opcodes executed
+  - Final state persisted
+  - R3 contains only delta
+  - Exit code 0

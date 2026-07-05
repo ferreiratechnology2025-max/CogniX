@@ -1,20 +1,32 @@
-# KOS — Knowledge Operating System
+# AEP — Agent Execution Protocol
 
-**Agent Execution Protocol (AEP) v1.0.0**
+**Status:** Stable Specification  
+**Version:** 1.0.0  
 
-[![Status: Active](https://img.shields.io/badge/status-active-brightgreen)]()
+[![Status: Specification](https://img.shields.io/badge/status-specification-blue)]()
 [![Version: 1.0.0](https://img.shields.io/badge/version-1.0.0-blue)]()
-[![Protocol: Stable](https://img.shields.io/badge/protocol-stable-green)]()
+[![Implementations: 1](https://img.shields.io/badge/implementations-1%2F4-orange)]()
 
 ---
 
-> **KOS is a protocol, not a framework.** It defines how AI agents can persist state, share knowledge, and execute tasks deterministically — using only files.
+> **AEP is a protocol, not a framework.** It defines how AI agents can persist state, share knowledge, and execute tasks deterministically — using only files.
+
+---
+
+## Current State
+
+✅ **Specification** — Complete and documented (AEP-0001 to AEP-0005)  
+✅ **Reference Implementation** — KOS v6.0 (Markdown) functional  
+✅ **Validation** — Tested with Claude Code (MiMoCode)  
+⏳ **Independent Implementations** — In progress  
+⏳ **Interoperability** — Not yet demonstrated  
+⏳ **Conformance Suite** — In development  
 
 ---
 
 ## Visão Geral
 
-KOS é um protocolo para execução determinística de agentes de IA sobre recursos de conhecimento persistentes. Baseado em:
+AEP é um protocolo para execução determinística de agentes de IA sobre recursos de conhecimento persistentes. Baseado em:
 
 - **Markdown puro** — zero dependências
 - **Protocolo universal de Resources** — todos os artefatos seguem o mesmo padrão
@@ -209,12 +221,40 @@ claude "Leia AGENTS.md e execute a tarefa"
 
 ---
 
+## Roadmap
+
+### Phase 1: Specification (✅ Complete)
+- Core protocol defined
+- Resource format specified
+- ISA documented
+- Conformance tests designed
+- Lifecycle defined
+
+### Phase 2: Implementation (🔄 In Progress)
+- Reference implementation (Markdown) — ✅
+- JSON implementation — ⏳
+- SQLite implementation — ⏳
+- YAML implementation — ⏳
+
+### Phase 3: Interoperability (⏳ Pending)
+- Cross-runtime resource exchange
+- Conformance suite automation
+- Compatibility certification
+
+### Phase 4: Standardization (⏳ Pending)
+- Community adoption
+- Independent implementations
+- Formal standards submission
+
+---
+
 ## Próximos Passos
 
-1. Leia `USAGE.md` para exemplos detalhados
-2. Leia `CONTRIBUTING.md` para como contribuir
-3. Explore os Resources em `RESOURCES/`
-4. Crie seu primeiro projeto com KOS
+1. Read `AEP/` for the full specification
+2. Read `USAGE.md` for practical guidance
+3. Read `CONTRIBUTING.md` for how to help
+4. Try the reference implementation (KOS v6.0)
+5. Build an independent implementation
 
 ---
 
@@ -226,16 +266,15 @@ MIT
 
 ## Status do Projeto
 
-| Fase | Status |
-|------|--------|
-| Estrutura Base | ✅ |
-| Resources Iniciais | ✅ |
-| Skills Complementares | ✅ |
-| Teste Completo | ✅ |
-| Documentação | ✅ |
-| Integração Git | ✅ |
-| Agentes Reais | ✅ |
-| Novos Resources | ✅ |
-| Correção R3 | ✅ |
+| Component | Status |
+|-----------|--------|
+| Specification (AEP-0001 to AEP-0005) | ✅ Complete |
+| Reference Implementation (Markdown) | ✅ Functional |
+| Validation (Claude Code) | ✅ Passed |
+| Independent Implementations | ⏳ Pending |
+| Interoperability | ⏳ Not demonstrated |
+| Conformance Suite | ⏳ In development |
 
-**KOS v6.0 — Pronto para uso em projetos reais.**
+**Estágio: Especificação Estável com Implementação de Referência**
+
+> AEP v1.0.0 é uma especificação estável com uma implementação de referência funcional. Está pronto para adoção experimental e validação por implementações independentes.

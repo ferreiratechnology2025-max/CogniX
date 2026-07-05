@@ -1,0 +1,15 @@
+id: TC-001-boot
+name: Basic Boot
+description: Validate BOOT opcode loads STATE and PROGRAM
+status: draft
+setup:
+  - valid STATE.md
+  - valid PROGRAM.md
+procedure:
+  - Read AGENTS.md
+  - Execute BOOT
+expected:
+  - STATE.md loaded
+  - PROGRAM.md loaded
+  - R0 [SESSION] set
+  - Exit code 0

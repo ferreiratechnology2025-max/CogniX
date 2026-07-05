@@ -1,0 +1,12 @@
+id: TC-003-validate
+name: Validate Resource
+description: Validate VALIDATE opcode checks Resource structure
+status: draft
+setup:
+  - Resource exists
+procedure:
+  - VALIDATE project-cognix
+expected:
+  - OK if valid
+  - FAIL with details if invalid
+  - Exit code 0
