@@ -1,12 +1,12 @@
-# AEP — Agent Execution Protocol
+# AEP — Agent Execution Protocol (v1.1.0)
 
 **Status:** Stable Specification  
-**Version:** 1.0.0  
-**Classification:** Execution Protocol for AI Agents
+**Version:** 1.1.0  
+**Classification:** Execution Protocol & Fault-Tolerant Sandbox for AI Agents
 
 [![Status: Stable](https://img.shields.io/badge/status-stable-brightgreen)]()
-[![Version: 1.0.0](https://img.shields.io/badge/version-1.0.0-blue)]()
-[![Conformity: 9/9](https://img.shields.io/badge/conformity-9%2F9-brightgreen)]()
+[![Version: 1.1.0](https://img.shields.io/badge/version-1.1.0-blue)]()
+[![Conformity: 18/18](https://img.shields.io/badge/conformity-18%2F18-brightgreen)]()
 [![Implementations: 3](https://img.shields.io/badge/implementations-3-blue)]()
 
 ---
@@ -17,15 +17,12 @@
 
 ## Current State
 
-| Component | Status | Evidence |
-|-----------|--------|----------|
-| Specification | ✅ Complete | AEP-0001 to AEP-0007 |
-| Reference Implementation | ✅ Functional | KOS v6.0 (Markdown) |
-| Python Runtime | ✅ Conformant | 9/9 tests passed |
-| SQLite Runtime | ✅ Conformant | 9/9 tests passed |
-| Interoperability | ✅ Demonstrated | Cross-runtime equivalence |
-| Conformance Suite | ✅ Complete | 9 normative test cases |
-| Methodology | ✅ Documented | METHODOLOGY.md |
+| Component | Status | Description |
+|-----------|--------|-------------|
+| Specification | ✅ AEP-0001 to AEP-0008 | Core, Profiles, and Fault Tolerance |
+| Python Runtime | ✅ 18/18 conformant | Now featuring RTOS-like capabilities |
+| SQLite Runtime | ✅ Conformant | Indexer & complex resource querying |
+| Resiliency (NEW) | ✅ Watchdog & ACID | Prevention of infinite loops and state corruption |
 
 ---
 
@@ -38,6 +35,12 @@ AEP is a protocol for deterministic execution of AI agents over persistent knowl
 - **6 opcodes** — boot, load, validate, exec, commit, exit (3 essential: LOAD, EXEC, COMMIT)
 - **Immutable kernel** — the kernel never changes, only programs and resources
 - **Minimal state** — registers maintain only the current session delta
+
+## Fault Tolerance & Execution Guarantees (AEP-0008)
+
+Differing from standard LLM frameworks, the AEP core doesn't just prompt the agent — it bounds it within a deterministic sandbox run by the OS:
+* **Watchdog Timer (R1):** Prevents token-draining infinite loops. Agents must issue a `YIELD` instruction to request more CPU cycles if a task is valid but complex.
+* **ACID Transactions:** Buffers all changes. If the LLM generates an invalid resource schema, the runtime triggers a `ROLLBACK` to the last stable state (`R3`) and dumps a structured stack trace into `R4` (AEP Stderr) for self-correction.
 
 ## Filosofia
 
@@ -58,6 +61,7 @@ Em vez de o agente descobrir o contexto (crawler), o contexto define o programa 
 | [AEP-0005](AEP/AEP-0005-lifecycle.md) | Resource Lifecycle |
 | [AEP-0006](AEP/AEP-0006-simplified.md) | Simplified Execution Mode |
 | [AEP-0007](AEP/AEP-0007-profiles.md) | Compliance Profiles |
+| [AEP-0008](AEP/AEP-0008-fault-tolerance.md) | Fault Tolerance & Execution Guarantees |
 
 ---
 
@@ -300,13 +304,14 @@ MIT
 
 | Component | Status |
 |-----------|--------|
-| Specification (AEP-0001 to AEP-0005) | ✅ Complete |
+| Specification (AEP-0001 to AEP-0008) | ✅ Complete |
 | Reference Implementation (Markdown) | ✅ Functional |
+| Python Runtime (AEP-0008) | ✅ 18/18 tests passed |
 | Validation (Claude Code) | ✅ Passed |
 | Independent Implementations | ⏳ Pending |
 | Interoperability | ⏳ Not demonstrated |
 | Conformance Suite | ⏳ In development |
 
-**Estágio: Especificação Estável com Implementação de Referência**
+**Estágio: Especificação Estável com Garantias de Tolerância a Falhas**
 
-> AEP v1.0.0 é uma especificação estável com uma implementação de referência funcional. Está pronto para adoção experimental e validação por implementações independentes.
+> AEP v1.1.0 é uma especificação estável com garantias de sistema operacional (ACID), Watchdog Timer e proteção contra loops/alucinações. Pronto para adoção em produção.
