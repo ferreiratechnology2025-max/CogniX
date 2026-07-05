@@ -1,60 +1,62 @@
-# AEP SQLite Implementation
+# AEP SQLite Implementation v1.0.0
 
-**Status:** Not Started  
-**Priority:** Medium  
+## Descrição
 
----
+Implementação do Agent Execution Protocol (AEP) usando SQLite como backend.
 
-## Goal
+**Características:**
+- ✅ Armazenamento em SQLite (sem Markdown)
+- ✅ 6 opcodes implementados
+- ✅ Schema normalizado (Resources + Dependencies)
+- ✅ Importação de Resources Markdown
+- ✅ Independente de formato
 
-Implement AEP using SQLite as the storage backend.
+## Instalação
 
-## Structure
-
+```bash
+cd implementations/sqlite
+pip install -e .
 ```
-sqlite/
-├── schema.sql
-├── kos.db
-├── lib/
-│   ├── boot.js
-│   ├── load.js
-│   ├── validate.js
-│   ├── exec.js
-│   ├── commit.js
-│   └── exit.js
-└── README.md
+
+## Uso
+
+### CLI
+
+```bash
+# Inicializar banco
+python -m aep_sqlite.cli --init
+
+# Importar Resources do Markdown
+python import_from_markdown.py
+
+# Listar Resources
+python -m aep_sqlite.cli --list
+
+# Rodar programa
+python -m aep_sqlite.cli --program --verbose
+```
+
+### Em Código
+
+```python
+from aep_sqlite.kernel import AEPKernelSQLite
+
+kernel = AEPKernelSQLite("aep.db")
+kernel.boot()
+kernel.load("project-cognix")
+kernel.validate("project-cognix")
 ```
 
 ## Schema
 
 ```sql
-CREATE TABLE state (
-  key TEXT PRIMARY KEY,
-  value TEXT
-);
-
-CREATE TABLE resources (
-  id TEXT PRIMARY KEY,
-  type TEXT,
-  version TEXT,
-  depends TEXT,
-  status TEXT,
-  content TEXT
-);
-
-CREATE TABLE registers (
-  name TEXT PRIMARY KEY,
-  value TEXT
-);
+resources (id, type, version, status, content)
+resource_dependencies (resource_id, depends_on)
+kernel_state (r0-r7 registers)
 ```
 
-## Status
+## Interoperabilidade
 
-- [ ] Schema design
-- [ ] Database initialization
-- [ ] State management
-- [ ] Resource loading
-- [ ] Validation
-- [ ] Execution
-- [ ] Commit
-- [ ] Conformance tests
+- ✅ Importa Resources do Markdown KOS v6.0
+- ✅ Mesmos opcodes e contratos
+- ✅ Compatível com Conformance Suite
