@@ -1,0 +1,23 @@
+# Arquivos temporários do sistema
+*.tmp
+*.log
+*.swp
+*~
+.DS_Store
+Thumbs.db
+
+# Arquivos de IDE
+.vscode/
+.idea/
+*.iml
+
+# Dependências (caso algum projeto dentro do KOS use)
+node_modules/
+vendor/
+__pycache__/
+*.pyc
+
+# Arquivos de ambiente
+.env
+.env.local
+.env.*.local
