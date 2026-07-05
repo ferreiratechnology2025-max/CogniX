@@ -1,12 +1,20 @@
-# KOS — Knowledge Operating System v6.0
+# KOS — Knowledge Operating System
 
-**Kernel mínimo para agentes de IA baseado em Markdown puro.**
+**Agent Execution Protocol (AEP) v1.0.0**
+
+[![Status: Active](https://img.shields.io/badge/status-active-brightgreen)]()
+[![Version: 1.0.0](https://img.shields.io/badge/version-1.0.0-blue)]()
+[![Protocol: Stable](https://img.shields.io/badge/protocol-stable-green)]()
+
+---
+
+> **KOS is a protocol, not a framework.** It defines how AI agents can persist state, share knowledge, and execute tasks deterministically — using only files.
 
 ---
 
 ## Visão Geral
 
-KOS é um sistema operacional de conhecimento que transforma seu repositório em um ambiente executável para agentes de IA. Baseado em:
+KOS é um protocolo para execução determinística de agentes de IA sobre recursos de conhecimento persistentes. Baseado em:
 
 - **Markdown puro** — zero dependências
 - **Protocolo universal de Resources** — todos os artefatos seguem o mesmo padrão
