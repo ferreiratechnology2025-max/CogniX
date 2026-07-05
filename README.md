@@ -2,37 +2,42 @@
 
 **Status:** Stable Specification  
 **Version:** 1.0.0  
+**Classification:** Execution Protocol for AI Agents
 
-[![Status: Specification](https://img.shields.io/badge/status-specification-blue)]()
+[![Status: Stable](https://img.shields.io/badge/status-stable-brightgreen)]()
 [![Version: 1.0.0](https://img.shields.io/badge/version-1.0.0-blue)]()
-[![Implementations: 1](https://img.shields.io/badge/implementations-1%2F4-orange)]()
+[![Conformity: 9/9](https://img.shields.io/badge/conformity-9%2F9-brightgreen)]()
+[![Implementations: 3](https://img.shields.io/badge/implementations-3-blue)]()
 
 ---
 
-> **AEP is a protocol, not a framework.** It defines how AI agents can persist state, share knowledge, and execute tasks deterministically — using only files.
+> **AEP is an Execution Protocol for AI Agents.** It defines how agents can persist state, share knowledge, and execute tasks deterministically — using only structured files.
 
 ---
 
 ## Current State
 
-✅ **Specification** — Complete and documented (AEP-0001 to AEP-0005)  
-✅ **Reference Implementation** — KOS v6.0 (Markdown) functional  
-✅ **Validation** — Tested with Claude Code (MiMoCode)  
-⏳ **Independent Implementations** — In progress  
-⏳ **Interoperability** — Not yet demonstrated  
-⏳ **Conformance Suite** — In development  
+| Component | Status | Evidence |
+|-----------|--------|----------|
+| Specification | ✅ Complete | AEP-0001 to AEP-0007 |
+| Reference Implementation | ✅ Functional | KOS v6.0 (Markdown) |
+| Python Runtime | ✅ Conformant | 9/9 tests passed |
+| SQLite Runtime | ✅ Conformant | 9/9 tests passed |
+| Interoperability | ✅ Demonstrated | Cross-runtime equivalence |
+| Conformance Suite | ✅ Complete | 9 normative test cases |
+| Methodology | ✅ Documented | METHODOLOGY.md |
 
 ---
 
-## Visão Geral
+## Overview
 
-AEP é um protocolo para execução determinística de agentes de IA sobre recursos de conhecimento persistentes. Baseado em:
+AEP is a protocol for deterministic execution of AI agents over persistent knowledge resources. Based on:
 
-- **Markdown puro** — zero dependências
-- **Protocolo universal de Resources** — todos os artefatos seguem o mesmo padrão
-- **ISA de 6 opcodes** — boot, load, validate, exec, commit, exit
-- **Microkernel imutável** — o kernel nunca muda, apenas o programa e os resources
-- **Estado mínimo** — registradores mantêm apenas o delta da sessão atual
+- **Structured files** — Markdown, JSON, YAML, or any structured format
+- **Universal Resource protocol** — all artifacts follow the same pattern
+- **6 opcodes** — boot, load, validate, exec, commit, exit (3 essential: LOAD, EXEC, COMMIT)
+- **Immutable kernel** — the kernel never changes, only programs and resources
+- **Minimal state** — registers maintain only the current session delta
 
 ## Filosofia
 
@@ -51,6 +56,33 @@ Em vez de o agente descobrir o contexto (crawler), o contexto define o programa 
 | [AEP-0003](AEP/AEP-0003-isa.md) | Kernel ISA |
 | [AEP-0004](AEP/AEP-0004-conformance.md) | Conformance Tests |
 | [AEP-0005](AEP/AEP-0005-lifecycle.md) | Resource Lifecycle |
+| [AEP-0006](AEP/AEP-0006-simplified.md) | Simplified Execution Mode |
+| [AEP-0007](AEP/AEP-0007-profiles.md) | Compliance Profiles |
+
+---
+
+## Compliance Profiles
+
+| Profile | Opcodes | Use Case |
+|---------|---------|----------|
+| **Lite** | LOAD, EXEC, COMMIT | Edge agents, prototyping |
+| **Extended** | LOAD, VALIDATE, EXEC, COMMIT, EXIT | Enterprise, auditing |
+
+---
+
+## Benchmark Methodology
+
+In our internal benchmark (v1.0.0-baseline), using a controlled scenario of 20 technical incident logs, 5 resource mappings, and Claude 3.5 Sonnet as execution engine:
+
+| Metric | AEP | RAG Baseline | Improvement |
+|--------|-----|--------------|-------------|
+| Tokens | 390 | 1950 | -80% |
+| Accuracy | 95% | 78% | +22% |
+| Latency | ~50ms | ~200ms | -75% |
+
+**Methodology:** [METHODOLOGY.md](tools/aep-benchmark/METHODOLOGY.md)
+
+**Note:** Results from controlled lab environment. Production results may vary.
 
 ---
 
