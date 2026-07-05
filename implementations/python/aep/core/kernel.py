@@ -1,224 +1,427 @@
 """
-AEP Kernel - Core execution engine
+AEP Kernel v1.0.0 - Implementação com AEP-0008 (Fault Tolerance)
 """
 
 import os
 import json
 from datetime import datetime
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional, List, Tuple
 
 from .state import StateManager, State
 from .resource import ResourceManager
 
 
+class AEPRuntimeError(Exception):
+    """Erro estruturado do runtime AEP"""
+    def __init__(self, error_code: str, message: str):
+        self.error_code = error_code
+        self.message = message
+        super().__init__(message)
+
+
 class AEPKernel:
-    """AEP Kernel implementation with 6 opcodes"""
-    
+    """AEP Kernel com Watchdog, YIELD e Rollback estruturado"""
+
     def __init__(self, base_path: str = "."):
         self.base_path = base_path
         self.state_manager = StateManager(base_path)
         self.resource_manager = ResourceManager(base_path)
         self.loaded_resources = {}
         self.session_id = None
-        
-    def boot(self) -> Dict[str, Any]:
-        """
-        BOOT opcode - Initialize the system
-        """
-        print("🔧 BOOT: Initializing AEP system...")
-        
-        # Load state
+        self.max_watchdog_cycles = 10
+        self.yield_history = []
+
+    def boot(self, verbose: bool = False) -> Dict[str, Any]:
+        """BOOT opcode - Inicializa o sistema com Watchdog"""
+        if verbose:
+            print("🔧 BOOT: Initializing AEP system with Fault Tolerance...")
+
         state = self.state_manager.load_state()
-        
-        # Set session
+
         self.session_id = datetime.now().strftime("%Y-%m-%d-%H-%M")
         state.set_register("R0", self.session_id)
-        
-        # Load program
+
+        # Inicializa Watchdog (R1) com valor padrão
+        watchdog_initial = state.get_register("R1") or "5"
+        state.set_register("R1", str(watchdog_initial))
+
+        self.yield_history = []
+
+        self.state_manager.save_state(state)
+
         program = self.state_manager.load_program()
-        
+
         return {
             "status": "OK",
             "session": self.session_id,
+            "watchdog_initial": watchdog_initial,
             "state": state.get_all_registers(),
             "program": program
         }
-    
+
+    def yield_cycles(self, reason: str, requested_cycles: int = 1, verbose: bool = False) -> Dict[str, Any]:
+        """YIELD opcode - Solicita extensão de ciclos do Watchdog"""
+        if verbose:
+            print(f"🔄 YIELD: Requesting {requested_cycles} cycles...")
+            print(f"  📋 Reason: {reason}")
+
+        if requested_cycles > 10:
+            return {
+                "status": "FAIL",
+                "error": "YIELD: requested_cycles exceeds maximum (10)"
+            }
+
+        state = self.state_manager.load_state()
+        current_watchdog = int(state.get_register("R1") or 0)
+
+        total_cycles = sum(y.get("cycles", 0) for y in self.yield_history) + requested_cycles
+        if total_cycles > self.max_watchdog_cycles:
+            return {
+                "status": "FAIL",
+                "error": f"YIELD: Total cycles ({total_cycles}) exceeds global limit ({self.max_watchdog_cycles})"
+            }
+
+        new_watchdog = current_watchdog + requested_cycles
+        state.set_register("R1", str(new_watchdog))
+        self.state_manager.save_state(state)
+
+        self.yield_history.append({
+            "timestamp": datetime.now().isoformat(),
+            "reason": reason,
+            "requested": requested_cycles,
+            "approved": requested_cycles,
+            "new_watchdog": new_watchdog
+        })
+
+        if verbose:
+            print(f"  ✅ YIELD approved. Watchdog now: {new_watchdog}")
+
+        return {
+            "status": "OK",
+            "approved": requested_cycles,
+            "new_watchdog": new_watchdog,
+            "total_cycles_used": total_cycles + requested_cycles,
+            "history": self.yield_history
+        }
+
     def load(self, resource_id: str, verbose: bool = False) -> Dict[str, Any]:
-        """
-        LOAD opcode - Load a Resource by ID
-        """
+        """LOAD opcode - Carrega Resource com validação de Watchdog"""
         if verbose:
             print(f"📂 LOAD: Loading resource '{resource_id}'...")
-        
-        # Load resource
+
+        state = self.state_manager.load_state()
+        watchdog = int(state.get_register("R1") or 0)
+        if watchdog <= 0:
+            return {
+                "status": "FAIL",
+                "error": "LOAD: Watchdog timer expired. Use YIELD to request more cycles."
+            }
+
         resource = self.resource_manager.load_resource(resource_id)
         if not resource:
             return {
                 "status": "FAIL",
-                "error": f"Resource '{resource_id}' not found"
+                "error": f"Resource '{resource_id}' not found",
+                "error_code": "ERR_AEP_0003_E001"
             }
-        
-        # Load dependencies
+
         dependencies = resource.get("depends", [])
         for dep_id in dependencies:
             dep = self.resource_manager.load_resource(dep_id)
             if not dep:
                 return {
                     "status": "FAIL",
-                    "error": f"Dependency '{dep_id}' not found for '{resource_id}'"
+                    "error": f"Dependency '{dep_id}' not found for '{resource_id}'",
+                    "error_code": "ERR_AEP_0003_E002"
                 }
             self.loaded_resources[dep_id] = dep
-        
+
         self.loaded_resources[resource_id] = resource
-        
+
+        new_watchdog = watchdog - 1
+        state.set_register("R1", str(new_watchdog))
+        self.state_manager.save_state(state)
+
         return {
             "status": "OK",
             "resource": resource_id,
             "dependencies": dependencies,
-            "loaded_count": len(self.loaded_resources)
+            "loaded_count": len(self.loaded_resources),
+            "watchdog_remaining": new_watchdog
         }
-    
+
     def validate(self, resource_id: str, verbose: bool = False) -> Dict[str, Any]:
-        """
-        VALIDATE opcode - Validate Resource structure
-        """
+        """VALIDATE opcode - Valida estrutura do Resource"""
         if verbose:
             print(f"🔍 VALIDATE: Validating resource '{resource_id}'...")
-        
-        # Load resource if not loaded
+
+        state = self.state_manager.load_state()
+        watchdog = int(state.get_register("R1") or 0)
+        if watchdog <= 0:
+            return {
+                "status": "FAIL",
+                "error": "VALIDATE: Watchdog timer expired. Use YIELD to request more cycles."
+            }
+
         if resource_id not in self.loaded_resources:
             result = self.load(resource_id)
             if result["status"] == "FAIL":
                 return result
-        
+
         resource = self.loaded_resources[resource_id]
         validation_result = self.resource_manager.validate_resource(resource)
-        
-        if validation_result["passed"]:
-            if verbose:
-                print(f"  ✅ Resource '{resource_id}' is valid")
-            return {"status": "OK", "resource": resource_id}
-        else:
-            if verbose:
-                print(f"  ❌ Resource '{resource_id}' is invalid: {validation_result['errors']}")
-            return {
-                "status": "FAIL",
-                "resource": resource_id,
-                "errors": validation_result["errors"]
-            }
-    
+
+        new_watchdog = watchdog - 1
+        state.set_register("R1", str(new_watchdog))
+        self.state_manager.save_state(state)
+
+        return {
+            "status": "OK" if validation_result["passed"] else "FAIL",
+            "resource": resource_id,
+            "valid": validation_result["passed"],
+            "errors": validation_result.get("errors", []),
+            "warnings": validation_result.get("warnings", []),
+            "watchdog_remaining": new_watchdog
+        }
+
     def exec(self, verbose: bool = False) -> Dict[str, Any]:
-        """
-        EXEC opcode - Execute the current task
-        """
+        """EXEC opcode - Executa a tarefa atual com Watchdog"""
         if verbose:
             print("⚡ EXEC: Executing current task...")
-        
-        # Read R2 [NEXT_ACT]
+
         state = self.state_manager.load_state()
+        watchdog = int(state.get_register("R1") or 0)
+        if watchdog <= 0:
+            return {
+                "status": "FAIL",
+                "error": "EXEC: Watchdog timer expired. Use YIELD to request more cycles."
+            }
+
         next_act = state.get_register("R2")
-        
+
         if not next_act:
             return {
                 "status": "FAIL",
                 "error": "No task defined in R2 [NEXT_ACT]"
             }
-        
+
         if verbose:
             print(f"  📋 Task: {next_act}")
-        
-        # Execute task (simulated)
-        state.set_register("R1", f"Executed: {next_act}")
+
+        new_watchdog = watchdog - 1
+        state.set_register("R1", str(new_watchdog))
         state.set_register("R7", datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ"))
-        
+
         self.state_manager.save_state(state)
-        
+
         return {
             "status": "OK",
             "task": next_act,
-            "result": "Task executed successfully"
+            "result": "Task executed successfully",
+            "watchdog_remaining": new_watchdog
         }
-    
-    def commit(self, modified_files: List[str] = None, verbose: bool = False) -> Dict[str, Any]:
-        """
-        COMMIT opcode - Persist changes and classify new knowledge
-        """
+
+    def execute_commit(self, modified_files: List[str] = None, verbose: bool = False) -> Dict[str, Any]:
+        """COMMIT opcode - Transação ACID com Rollback estruturado"""
         if verbose:
-            print("💾 COMMIT: Persisting changes...")
-        
+            print("💾 COMMIT: Starting ACID transaction...")
+
         state = self.state_manager.load_state()
-        
-        # Update registers
-        if modified_files:
-            # R3 should be delta only
-            state.set_register("R3", ", ".join(modified_files))
+        watchdog = int(state.get_register("R1") or 0)
+
+        stable_snapshot = state.get_register("R3") or "{}"
+        if isinstance(stable_snapshot, str):
+            try:
+                stable_snapshot = json.loads(stable_snapshot)
+            except (json.JSONDecodeError, TypeError):
+                stable_snapshot = {}
+
+        try:
+            # 1. Decrementa Watchdog
+            new_watchdog = watchdog - 1
+            if new_watchdog < 0:
+                raise AEPRuntimeError(
+                    error_code="ERR_AEP_0008_TIMEOUT",
+                    message="Watchdog estourado. Execução abortada."
+                )
+            state.set_register("R1", str(new_watchdog))
+
+            # 2. Validação semântica (bouncer)
+            if modified_files:
+                for file_path in modified_files:
+                    resource_id = os.path.splitext(os.path.basename(file_path))[0]
+                    resource = self.resource_manager.load_resource(resource_id)
+                    if resource:
+                        validation = self.resource_manager.validate_resource(resource)
+                        if not validation["passed"]:
+                            raise AEPRuntimeError(
+                                error_code="ERR_AEP_0002_VALIDATION",
+                                message=f"Resource '{resource_id}' validation failed: {validation['errors']}"
+                            )
+
+            # 3. Persiste no disco
+            if modified_files:
+                state.set_register("R3", ", ".join(modified_files))
+
+            # 4. Atualiza timestamp e status
+            state.set_register("R7", datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ"))
+            state.set_register("R6", "OK")
+
+            self.state_manager.save_state(state)
+
+            # 5. Atualiza snapshot estável (R3) para o próximo ciclo
+            current_state = state.get_all_registers()
+            state.set_register("R3", json.dumps(current_state))
+
+            # Limpa erros se a transação foi bem-sucedida
+            state.set_register("R4", None)
+            self.state_manager.save_state(state)
+
             if verbose:
-                print(f"  📝 Modified: {', '.join(modified_files)}")
-        
-        state.set_register("R7", datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ"))
-        
-        # Save state
-        self.state_manager.save_state(state)
-        
-        return {
-            "status": "OK",
-            "state": state.get_all_registers()
-        }
-    
+                print("  ✅ Transaction committed successfully")
+
+            return {
+                "status": "OK",
+                "modified": modified_files or [],
+                "watchdog_remaining": new_watchdog,
+                "state": state.get_all_registers()
+            }
+
+        except AEPRuntimeError as err:
+            if verbose:
+                print(f"  ❌ Transaction failed: {err.message}")
+                print(f"  🔄 Executing ROLLBACK to stable snapshot...")
+
+            # Restaura buffer do snapshot estável
+            if stable_snapshot:
+                for key, value in stable_snapshot.items():
+                    if key.startswith("R"):
+                        state.set_register(key, str(value))
+
+            # Injeta Stderr estruturado em R4
+            state.set_register("R4", json.dumps({
+                "timestamp": datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ"),
+                "error_code": err.error_code,
+                "trace": err.message,
+                "watchdog_at_failure": new_watchdog
+            }))
+
+            state.set_register("R7", "ROLLBACK_EXECUTED")
+            self.state_manager.save_state(state)
+
+            return {
+                "status": "FAIL",
+                "error": err.message,
+                "error_code": err.error_code,
+                "rollback": True,
+                "state": state.get_all_registers()
+            }
+
+        except Exception as err:
+            if verbose:
+                print(f"  ❌ Unexpected error: {str(err)}")
+                print(f"  🔄 Executing emergency ROLLBACK...")
+
+            state.set_register("R4", json.dumps({
+                "timestamp": datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ"),
+                "error_code": "ERR_SYSTEM_UNEXPECTED",
+                "trace": str(err)
+            }))
+
+            state.set_register("R7", "ROLLBACK_FORCED")
+            self.state_manager.save_state(state)
+
+            return {
+                "status": "FAIL",
+                "error": str(err),
+                "error_code": "ERR_SYSTEM_UNEXPECTED",
+                "rollback": True
+            }
+
+    def commit(self, modified_files: List[str] = None, verbose: bool = False) -> Dict[str, Any]:
+        """COMMIT wrapper - interface pública"""
+        return self.execute_commit(modified_files, verbose)
+
     def exit(self, verbose: bool = False) -> Dict[str, Any]:
-        """
-        EXIT opcode - End session
-        """
+        """EXIT opcode - Encerra sessão com verificação final"""
         if verbose:
-            print("🚪 EXIT: Ending session...")
-        
+            print("🚪 EXIT: Ending session with final health check...")
+
         state = self.state_manager.load_state()
+        watchdog = int(state.get_register("R1") or 0)
+
+        if watchdog <= 0:
+            state.set_register("R6", "FAIL")
+            state.set_register("R7", "EXIT_1_WATCHDOG_TIMEOUT")
+            self.state_manager.save_state(state)
+            return {
+                "status": "FAIL",
+                "error": "EXIT: Watchdog timeout detected. Session terminated with errors.",
+                "watchdog": watchdog
+            }
+
         state.set_register("R6", "OK")
         state.set_register("R7", datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ"))
-        
+
         self.state_manager.save_state(state)
-        
+
         return {
             "status": "OK",
             "session": self.session_id,
-            "timestamp": state.get_register("R7")
+            "timestamp": state.get_register("R7"),
+            "watchdog_remaining": watchdog,
+            "yield_history": self.yield_history
         }
-    
-    def run_program(self, program_flow: List[str], verbose: bool = False) -> Dict[str, Any]:
-        """
-        Run a program flow
-        """
+
+    def run_program(self, program: List[str], verbose: bool = False) -> Dict[str, Any]:
+        """Executa um programa completo"""
         results = {}
-        
-        for opcode in program_flow:
-            if opcode == "BOOT":
-                results["BOOT"] = self.boot()
-            elif opcode.startswith("LOAD"):
-                resource_id = opcode.split(" ")[1] if len(opcode.split(" ")) > 1 else None
+
+        for opcode in program:
+            parts = opcode.strip().split()
+            command = parts[0]
+
+            if command == "BOOT":
+                results["BOOT"] = self.boot(verbose)
+            elif command == "YIELD":
+                # Handle YIELD 'reason with spaces' N
+                rest = opcode.strip()[5:].strip()  # everything after "YIELD"
+                if rest.startswith("'") or rest.startswith('"'):
+                    quote_char = rest[0]
+                    end_quote = rest.find(quote_char, 1)
+                    reason = rest[1:end_quote].strip() if end_quote > 0 else rest.strip(quote_char)
+                    remaining = rest[end_quote+1:].strip() if end_quote > 0 else ""
+                    cycles = int(remaining) if remaining.isdigit() else 1
+                else:
+                    tokens = rest.split()
+                    reason = tokens[0] if tokens else "No reason provided"
+                    cycles = int(tokens[1]) if len(tokens) > 1 and tokens[1].isdigit() else 1
+                results["YIELD"] = self.yield_cycles(reason, cycles, verbose)
+            elif command == "LOAD":
+                resource_id = parts[1] if len(parts) > 1 else None
                 if resource_id:
-                    result = self.load(resource_id, verbose)
-                    results["LOAD"] = result
+                    results["LOAD"] = self.load(resource_id, verbose)
                 else:
                     results["LOAD"] = {"status": "FAIL", "error": "No resource ID provided"}
-            elif opcode.startswith("VALIDATE"):
-                resource_id = opcode.split(" ")[1] if len(opcode.split(" ")) > 1 else None
+            elif command == "VALIDATE":
+                resource_id = parts[1] if len(parts) > 1 else None
                 if resource_id:
-                    result = self.validate(resource_id, verbose)
-                    results["VALIDATE"] = result
+                    results["VALIDATE"] = self.validate(resource_id, verbose)
                 else:
                     results["VALIDATE"] = {"status": "FAIL", "error": "No resource ID provided"}
-            elif opcode == "EXEC":
+            elif command == "EXEC":
                 results["EXEC"] = self.exec(verbose)
-            elif opcode == "COMMIT":
+            elif command == "COMMIT":
                 results["COMMIT"] = self.commit(verbose=verbose)
-            elif opcode == "EXIT":
+            elif command == "EXIT":
                 results["EXIT"] = self.exit(verbose)
             else:
-                results[opcode] = {"status": "FAIL", "error": f"Unknown opcode: {opcode}"}
-            
-            # Stop on failure
-            if results.get(opcode, {}).get("status") == "FAIL":
+                results[command] = {"status": "FAIL", "error": f"Unknown opcode: {command}"}
+
+            # Para na primeira falha
+            if results[command].get("status") == "FAIL":
+                if verbose:
+                    print(f"❌ Program halted at: {command}")
                 break
-        
+
         return results
