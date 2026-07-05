@@ -1,0 +1,17 @@
+{
+  "name": "aep-conformance",
+  "version": "1.0.0",
+  "description": "AEP Conformance Suite v1.0.0",
+  "main": "runner/conformance-runner.js",
+  "scripts": {
+    "test": "node runner/conformance-runner.js --all",
+    "validate-state": "node runner/conformance-runner.js --state",
+    "validate-resource": "node runner/conformance-runner.js --resource"
+  },
+  "keywords": ["aep", "conformance", "protocol"],
+  "author": "KOS Contributors",
+  "license": "MIT",
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
