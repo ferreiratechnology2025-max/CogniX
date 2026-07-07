@@ -34,8 +34,8 @@ function validateResource(filePath, verbose = false) {
     return { passed: false, errors, warnings };
   }
 
-  // Extract frontmatter
-  const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
+  // Extract frontmatter (supports both LF and CRLF)
+  const frontmatterMatch = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
   if (!frontmatterMatch) {
     errors.push('No frontmatter found (missing --- delimiters)');
     return { passed: false, errors, warnings };
@@ -81,8 +81,8 @@ function validateResource(filePath, verbose = false) {
     errors.push(`Invalid status: ${parsed.status} (expected one of: ${VALID_STATUS.join(', ')})`);
   }
 
-  // Check content exists
-  const contentMatch = content.match(/^---\n[\s\S]*?\n---\n([\s\S]*)$/);
+  // Check content exists (supports CRLF)
+  const contentMatch = content.match(/^---\r?\n[\s\S]*?\r?\n---\r?\n([\s\S]*)$/);
   if (!contentMatch || contentMatch[1].trim() === '') {
     warnings.push('Resource content is empty');
   }

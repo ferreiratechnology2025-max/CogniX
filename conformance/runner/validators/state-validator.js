@@ -31,8 +31,8 @@ function validateState(filePath, verbose = false) {
     return { passed: false, errors, warnings };
   }
 
-  // Extract frontmatter
-  const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
+  // Extract frontmatter (supports both LF and CRLF)
+  const frontmatterMatch = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
   if (!frontmatterMatch) {
     errors.push('No frontmatter found (missing --- delimiters)');
     return { passed: false, errors, warnings };
@@ -66,8 +66,8 @@ function validateState(filePath, verbose = false) {
     errors.push(`Invalid status: ${parsed.status} (expected draft, active, deprecated, archived)`);
   }
 
-  // Validate content (state registers)
-  const contentMatch = content.match(/^---\n[\s\S]*?\n---\n([\s\S]*)$/);
+  // Validate content (state registers, supports CRLF)
+  const contentMatch = content.match(/^---\r?\n[\s\S]*?\r?\n---\r?\n([\s\S]*)$/);
   if (!contentMatch) {
     errors.push('No content found after frontmatter');
     return { passed: false, errors, warnings };
@@ -175,7 +175,7 @@ function validateState(filePath, verbose = false) {
  */
 function parseYamlLike(text) {
   const result = {};
-  const lines = text.split('\n');
+  const lines = text.replace(/\r\n?/g, '\n').split('\n');
   for (const line of lines) {
     const match = line.match(/^([a-zA-Z_][a-zA-Z0-9_]*):\s*(.*)$/);
     if (match) {
@@ -200,7 +200,7 @@ function parseYamlLike(text) {
  */
 function extractRegisters(content) {
   const registers = {};
-  const lines = content.split('\n');
+  const lines = content.replace(/\r\n?/g, '\n').split('\n');
   for (const line of lines) {
     const match = line.match(/^R([0-7])\s*\[([^\]]*)\]\s*=\s*(.*)$/);
     if (match) {
