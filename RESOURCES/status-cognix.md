@@ -7,11 +7,11 @@ status: active
 ---
 # STATE REGISTERS — CogniX
 
-R0 [SESSION] = 2026-07-04-17-00
-R1 [LAST_ACT] = R2 executado: Codebuff executou o fluxo KOS, validou recursos e confirmou documentacao de teste
+R0 [SESSION] = 2026-07-06-12-00
+R1 [LAST_ACT] = EXEC executado: Boot sequence completa via OpenCode. LOAD project-cognix/status-cognix, VALIDATE 13/13 recursos OK, COMMIT atualizado
 R2 [NEXT_ACT] = Iniciar testes com Cursor e Aider
-R3 [MODIFIED] = RESOURCES/status-cognix.md
+R3 [MODIFIED] = (delta da sessão — README.md em D:\mvpbook atualizado)
 R4 [BLOCKERS] = Nenhum
 R5 [ACTIVE_SK] = skill-kos
 R6 [HEALTH] = OK
-R7 [TIMESTAMP] = 2026-07-04T23:45:00Z
+R7 [TIMESTAMP] = 2026-07-06T12-00-00Z

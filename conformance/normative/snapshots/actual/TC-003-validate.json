@@ -1,8 +1,6 @@
 {
-  "status": "OK",
-  "returncode": 0,
-  "stdout": {
-    "raw": "\ud83d\udd27 BOOT: Initializing AEP system with SQLite...\n\ud83d\udcc2 LOAD: Loading resource 'project-cognix' from SQLite...\n\ud83d\udd0d VALIDATE: Validating resource 'project-cognix' in SQLite...\n\u26a1 EXEC: Executing current task...\n{\n  \"BOOT\": {\n    \"status\": \"OK\",\n    \"session\": \"2026-07-05-00-53\",\n    \"state\": {\n      \"id\": 1,\n      \"active_project\": null,\n      \"active_status\": null,\n      \"session\": null,\n      \"last_run\": null,\n      \"last_result\": null,\n      \"program\": \"padrao\",\n      \"r0_session\": \"2026-07-05-00-53\",\n      \"r1_last_act\": null,\n      \"r2_next_act\": null,\n      \"r3_modified\": null,\n      \"r4_blockers\": null,\n      \"r5_active_sk\": null,\n      \"r6_health\": \"OK\",\n      \"r7_timestamp\": null,\n      \"updated_at\": \"2026-07-05T00:53:44.095579\"\n    }\n  },\n  \"LOAD\": {\n    \"status\": \"OK\",\n    \"resource\": \"project-cognix\",\n    \"dependencies\": [\n      \"skill-git\",\n      \"skill-kos\",\n      \"skill-markdown\"\n    ],\n    \"loaded_count\": 4\n  },\n  \"VALIDATE\": {\n    \"status\": \"OK\",\n    \"resource\": \"project-cognix\",\n    \"valid\": true,\n    \"errors\": []\n  },\n  \"EXEC\": {\n    \"status\": \"FAIL\",\n    \"error\": \"No task defined in R2 [NEXT_ACT]\"\n  }\n}\n"
-  },
+  "status": "FAIL",
+  "returncode": 1,
+  "stdout": {},
   "runtime": "sqlite"
 }
