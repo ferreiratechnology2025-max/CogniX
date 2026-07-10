@@ -66,5 +66,6 @@ test definitions only and does not yet execute implementations.
 | ERR_AEP_0002_VALIDATION | Resource validation failed |
 | ERR_AEP_0003_E001 | Resource not found |
 | ERR_AEP_0003_E002 | Dependency not found |
+| ERR_AEP_0003_E003 | Invalid resource id (not a plain identifier; rejected before path resolution) |
 | ERR_AEP_0008_TIMEOUT | Watchdog timer expired |
 | ERR_SYSTEM_UNEXPECTED | Unexpected system error |

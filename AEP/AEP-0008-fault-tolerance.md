@@ -61,6 +61,18 @@ result = kernel.yield_cycles(
   that would exceed the global limit MUST be refused.
 - YIELD history MUST be retained for auditing.
 
+### 1.4 YIELD — Conditional Requirement
+
+YIELD is a conditional extension opcode defined by this specification. It is
+NOT part of the six-opcode core ISA (AEP-0001 §6).
+
+- Implementations that enforce a Watchdog Timer (R1) MUST implement YIELD. A
+  watchdog without YIELD provides no recovery path for valid long-running tasks
+  and is NON-CONFORMANT with this specification.
+- Implementations that do not enforce a Watchdog Timer MAY omit YIELD.
+- A YIELD instruction MUST extend R1 [WATCHDOG] and MUST NOT modify any other
+  register or resource.
+
 ---
 
 ## 2. Atomic Transactions and the Validation "Stderr" (R4)
@@ -98,11 +110,15 @@ snapshot in R3. On failure, the state MUST be restored to this snapshot.
 
 ## 3. Error Codes
 
+Error codes are namespaced by the specification that defines the violated rule;
+all codes are registered in this table regardless of origin.
+
 | Code | Description |
 |------|-------------|
 | ERR_AEP_0002_VALIDATION | Resource validation failed |
 | ERR_AEP_0003_E001 | Resource not found |
 | ERR_AEP_0003_E002 | Dependency not found |
+| ERR_AEP_0003_E003 | Invalid resource id: not a plain identifier; rejected before path resolution |
 | ERR_AEP_0008_TIMEOUT | Watchdog expired |
 | ERR_SYSTEM_UNEXPECTED | Unexpected system failure |
 
