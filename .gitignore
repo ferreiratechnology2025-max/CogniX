@@ -21,3 +21,24 @@ __pycache__/
 .env
 .env.local
 .env.*.local
+
+# Build artifacts
+*.egg-info/
+
+# Generated indexes / databases (rebuilt by tooling, not source of truth)
+aep-index.db
+implementations/sqlite/aep.db
+
+# Deprecated benchmark output (RAG comparison removed — wrong category under
+# the execution-envelope model; see README). Kept locally, not versioned.
+benchmark-results.json
+
+# Volatile runtime byproducts — these embed per-run session-ids/timestamps and
+# are non-deterministic. They must not be versioned in a determinism-focused
+# repo. The kernel/tooling regenerates them on every run.
+KERNEL/STATE.md
+conformance/normative/snapshots/actual/
+
+# Partial experiment output (currently 1 of 30 plans). Results are versioned
+# only when the full 30-plan experiment has actually been run and reviewed.
+experiment-results/
