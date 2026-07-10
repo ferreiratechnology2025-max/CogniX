@@ -1,15 +1,24 @@
 {
-  "experiment_date": "2026-07-07T09:57:35.204709",
-  "validator_version": "1.0.0",
-  "spec": "AEP-IR-1.0",
-  "total_tasks": 2,
+  "note": "Post-calibration selftest (GATE 0). Regenerated against the current validator; the pre-calibration version showed valid-plan as invalid (stale). Do not inherit older selftest artifacts as truth.",
+  "validator_version": "1.0-calibrated",
+  "canonicalization": {
+    "library": "rfc8785",
+    "version": "0.1.4",
+    "standard": "RFC 8785 (JCS)"
+  },
   "results": [
     {
-      "task": "invalid-plan-multiple-errors.json",
-      "file": "test_plans\\invalid-plan-multiple-errors.json",
-      "status": "validated",
+      "file": "test_plans/valid-plan.json",
+      "role": "positive_control",
+      "valid": true,
+      "errors": 0,
+      "rejection_modes": {}
+    },
+    {
+      "file": "test_plans/invalid-plan-multiple-errors.json",
+      "role": "negative_control",
       "valid": false,
-      "errors": 33,
+      "errors": 32,
       "rejection_modes": {
         "X-1": 4,
         "N-7": 1,
@@ -22,18 +31,7 @@
         "TEC-1": 2,
         "CR-1": 6,
         "CR-2": 5,
-        "CR-3": 6,
-        "OR-1": 1
-      }
-    },
-    {
-      "task": "valid-plan.json",
-      "file": "test_plans\\valid-plan.json",
-      "status": "validated",
-      "valid": false,
-      "errors": 1,
-      "rejection_modes": {
-        "OR-1": 1
+        "CR-3": 6
       }
     }
   ]

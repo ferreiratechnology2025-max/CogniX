@@ -27,34 +27,84 @@
       {
         "id": "node-001",
         "type": "transformation",
-        "effects": ["CALL_TOOL"],
-        "capabilities": ["memory_rw"],
-        "inputs": [{"binding": "input_doc", "access": "read"}],
-        "outputs": [{"binding": "result", "access": "write"}],
-        "payload": { "operation": "parse" }
+        "effects": [
+          "CALL_TOOL"
+        ],
+        "capabilities": [
+          "memory_rw"
+        ],
+        "inputs": [
+          {
+            "binding": "input_doc",
+            "access": "read"
+          }
+        ],
+        "outputs": [
+          {
+            "binding": "result",
+            "access": "write"
+          }
+        ],
+        "payload": {
+          "operation": "parse"
+        }
       },
       {
         "id": "node-002",
         "type": "tool_call",
-        "effects": ["READ"],
-        "capabilities": ["tool_execution"],
-        "inputs": [{"binding": "result", "access": "read"}],
-        "outputs": [{"binding": "result", "access": "write"}],
-        "payload": { "tool": "external_api" }
+        "effects": [
+          "READ"
+        ],
+        "capabilities": [
+          "tool_execution"
+        ],
+        "inputs": [
+          {
+            "binding": "result",
+            "access": "read"
+          }
+        ],
+        "outputs": [
+          {
+            "binding": "result",
+            "access": "write"
+          }
+        ],
+        "payload": {
+          "tool": "external_api"
+        }
       },
       {
         "id": "node-003",
         "type": "mutation",
-        "effects": ["READ"],
-        "capabilities": ["memory_rw"],
-        "inputs": [{"binding": "nonexistent_binding", "access": "read"}],
-        "outputs": [{"binding": "result", "access": "write"}],
-        "payload": { "format": "report" }
+        "effects": [
+          "READ"
+        ],
+        "capabilities": [
+          "memory_rw"
+        ],
+        "inputs": [
+          {
+            "binding": "nonexistent_binding",
+            "access": "read"
+          }
+        ],
+        "outputs": [
+          {
+            "binding": "result",
+            "access": "write"
+          }
+        ],
+        "payload": {
+          "format": "report"
+        }
       },
       {
         "id": "node-001",
         "type": "sync",
-        "effects": ["READ"],
+        "effects": [
+          "READ"
+        ],
         "capabilities": [],
         "inputs": [],
         "outputs": []
@@ -64,26 +114,57 @@
         "type": "sync",
         "effects": [],
         "capabilities": [],
-        "inputs": [{"binding": "result", "access": "write"}],
-        "outputs": [{"binding": "result", "access": "write"}],
+        "inputs": [
+          {
+            "binding": "result",
+            "access": "write"
+          }
+        ],
+        "outputs": [
+          {
+            "binding": "result",
+            "access": "write"
+          }
+        ],
         "payload": {}
       },
       {
         "id": "node-006",
         "type": "mutation",
-        "effects": ["WRITE"],
-        "capabilities": ["memory_rw"],
+        "effects": [
+          "WRITE"
+        ],
+        "capabilities": [
+          "memory_rw"
+        ],
         "inputs": [],
-        "outputs": [{"binding": "result", "access": "write"}],
+        "outputs": [
+          {
+            "binding": "result",
+            "access": "write"
+          }
+        ],
         "payload": {}
       }
     ],
     "edges": [
-      {"source": "node-001", "target": "node-002"},
-      {"source": "node-002", "target": "node-003"},
-      {"source": "node-003", "target": "node-005"},
-      {"source": "node-005", "target": "node-001"}
+      {
+        "source": "node-001",
+        "target": "node-002"
+      },
+      {
+        "source": "node-002",
+        "target": "node-003"
+      },
+      {
+        "source": "node-003",
+        "target": "node-005"
+      },
+      {
+        "source": "node-005",
+        "target": "node-001"
+      }
     ]
   },
-  "checksum": "sha256-placeholder"
+  "checksum": "c1f418256cfb63de5f6bfedd1df7cc21eef4299f17686fb05207f9c95c97c064"
 }
