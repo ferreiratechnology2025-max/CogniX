@@ -2,7 +2,7 @@
 
 **Status:** Stable Specification  
 **Version:** 1.1.0  
-**Classification:** Execution Protocol for AI Agents
+**Classification:** Deterministic Execution Envelope for AI Agents
 
 [![Status: Stable](https://img.shields.io/badge/status-stable-brightgreen)]()
 [![Version: 1.1.0](https://img.shields.io/badge/version-1.1.0-blue)]()
@@ -12,19 +12,28 @@
 
 ---
 
-> **AEP is an Execution Protocol for AI Agents.** It defines how agents can persist state, share knowledge, and execute tasks deterministically — using only structured files.
+> **AEP is a deterministic execution envelope for AI Agents.** It bounds state, cycles, transactions, and error recovery around the agent — using only structured files. The agent still executes the task; AEP makes everything *around* that execution deterministic.
 
 ---
 
 ## What is AEP?
 
-AEP is a protocol for deterministic execution of AI agents over persistent knowledge resources. Based on:
+AEP is a protocol that provides a deterministic execution envelope for AI agents over persistent knowledge resources. Based on:
 
 - **Structured files** — Markdown, JSON, YAML, or any structured format
 - **Universal Resource protocol** — all artifacts follow the same pattern
 - **7 opcodes** — BOOT, LOAD, VALIDATE, EXEC, COMMIT, EXIT, YIELD
 - **Immutable kernel** — the kernel never changes, only programs and resources
 - **Minimal state** — registers maintain only the current session delta
+
+## What AEP is NOT
+
+- Not an agent framework — it does not build agents.
+- Not an execution sandbox — task execution belongs to the agent (see the
+  Execution Boundary, AEP-0003 §3.4).
+- Not a RAG alternative — different category.
+- It does not make LLM inference deterministic — it makes everything *around*
+  inference deterministic: state, cycles, transactions, error recovery.
 
 ---
 

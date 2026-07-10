@@ -2,7 +2,7 @@
 
 ## Visão
 
-O AEP (Agent Execution Protocol) tem como visão se tornar o protocolo padrão para execução determinística de agentes de IA sobre conhecimento persistente.
+O AEP (Agent Execution Protocol) tem como visão se tornar o protocolo padrão de envelope de execução determinística para agentes de IA sobre conhecimento persistente.
 
 ## Fases
 

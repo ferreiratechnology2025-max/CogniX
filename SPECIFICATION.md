@@ -7,7 +7,7 @@
 
 ## 1. Scope
 
-This specification defines a protocol for deterministic execution of AI agents over persistent knowledge resources.
+This specification defines a protocol that provides a deterministic execution envelope for AI agents over persistent knowledge resources.
 
 The protocol is:
 - **Format-agnostic** — can be implemented in Markdown, JSON, YAML, or any structured format

@@ -95,7 +95,7 @@ KOS is a protocol because:
 - Knowledge accumulates over time
 
 ### For AI Agents
-- Deterministic execution
+- Deterministic execution envelope
 - Persistent state
 - Clear contracts
 
