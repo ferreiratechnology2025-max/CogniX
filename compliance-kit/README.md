@@ -2,7 +2,17 @@
 
 ## Purpose
 
-The Compliance Kit validates whether an implementation correctly follows the AEP specification. It provides an automated test suite and report generation.
+The Compliance Kit provides **structural validation of test definitions**: it
+checks that the YAML test cases in `tests/` are well-formed (each declares a
+`procedure` and `expected` block) and generates a report.
+
+> **⚠️ This kit does NOT yet execute implementations.** It validates test
+> *structure*, not runtime behavior — a "CONFORMANT" result means the test
+> definitions are well-formed, not that any runtime passed them. Runtime
+> conformance is verified by `conformance/normative/test_runner.py` (pipeline
+> smoke test) and by the behavioral pytest suite in
+> `implementations/python/tests/`. Executable third-party conformance is
+> planned; see the project backlog.
 
 ## Structure
 
@@ -77,8 +87,11 @@ Status: CONFORMANT
 ## Adding a New Implementation
 
 1. Implement the AEP specification
-2. Run the compliance kit: `python runner/runner.py --implementation /path`
-3. Ensure all 11 tests pass
+2. Verify runtime behavior with `conformance/normative/test_runner.py` and the
+   behavioral pytest suite — these actually exercise a runtime
+3. Run the compliance kit (`python runner/runner.py --implementation /path`) to
+   confirm the test definitions are well-formed. Note: this step validates
+   structure only and does not yet execute your implementation
 4. Submit results with your implementation
 
 ## Compliance Badge

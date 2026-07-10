@@ -6,7 +6,8 @@
 
 [![Status: Stable](https://img.shields.io/badge/status-stable-brightgreen)]()
 [![Version: 1.1.0](https://img.shields.io/badge/version-1.1.0-blue)]()
-[![Conformity: 18/18](https://img.shields.io/badge/conformity-18%2F18-brightgreen)]()
+[![Behavioral tests: 10/10](https://img.shields.io/badge/pytest-10%2F10-brightgreen)]()
+[![Normative: smoke 20/20](https://img.shields.io/badge/normative-smoke%2020%2F20-yellow)]()
 [![Implementations: 3](https://img.shields.io/badge/implementations-3-blue)]()
 
 ---
@@ -40,7 +41,7 @@ The protocol is formally defined in [AEP/](AEP/) documents:
 | [AEP-0005](AEP/AEP-0005-lifecycle.md) | Resource Lifecycle | Stable |
 | [AEP-0006](AEP/AEP-0006-simplified.md) | Simplified Execution Mode | Stable |
 | [AEP-0007](AEP/AEP-0007-profiles.md) | Compliance Profiles | Stable |
-| [AEP-0008](AEP/AEP-0008-fault-tolerance.md) | Fault Tolerance & Execution Guarantees | Stable |
+| [AEP-0008](AEP/AEP-0008-fault-tolerance.md) | Fault Tolerance & Execution Guarantees | Active |
 
 For the pure specification without implementation details, see [AEP/README.md](AEP/README.md).
 
@@ -50,29 +51,59 @@ For the pure specification without implementation details, see [AEP/README.md](A
 
 | Implementation | Status | Conformance | Notes |
 |----------------|--------|-------------|-------|
-| Reference (Markdown) | Stable | 18/18 | KOS v6.0 |
-| Python | Stable | 18/18 | RTOS-like capabilities (Watchdog, ACID) |
-| SQLite | Stable | 18/18 | Indexer & complex resource querying |
+| Reference (Markdown) | Stable | N/A — executable conformance not applicable (LLM-interpreted) | KOS v6.0 |
+| Python | Stable | pytest 10/10 behavioral; normative smoke 10 | Watchdog + validation rollback |
+| SQLite | Stable | normative smoke 10 (no behavioral suite yet) | Indexer & complex resource querying |
 
 ---
 
 ## Fault Tolerance (AEP-0008)
 
-Differing from standard LLM frameworks, the AEP core doesn't just prompt the agent — it bounds it within a deterministic sandbox:
+AEP-0008 (Active) bounds the execution envelope around the agent. Its scope is
+**logical validation failures**, not process crashes:
 
-- **Watchdog Timer (R1):** Prevents token-draining infinite loops. Agents must issue a `YIELD` instruction to request more CPU cycles if a task is valid but complex.
-- **ACID Transactions:** Buffers all changes. If the LLM generates an invalid resource schema, the runtime triggers a `ROLLBACK` to the last stable state (`R3`) and dumps a structured stack trace into `R4` (AEP Stderr) for self-correction.
+- **Watchdog Timer (R1):** Bounds runaway loops. An agent issues a `YIELD`
+  instruction to request additional cycles when a task is valid but complex.
+- **Validation rollback:** COMMIT buffers changes and validates them. If a
+  resource fails schema validation, the runtime discards the change, restores
+  the last stable snapshot (`R3`), and writes a structured error into `R4`
+  (AEP Stderr) for self-correction.
+
+Scope boundary: this is logical rollback within a single process. Process
+crashes, write-ahead logging, and crash recovery are out of scope (see the
+Security Considerations in AEP-0001). Durability of history is delegated to the
+underlying version control system, not guaranteed by the kernel.
 
 ---
 
-## Compliance Kit
+## Conformance
 
-An independent [Compliance Kit](compliance-kit/) is available for third-party implementations to validate conformance.
+Conformance is exercised at three levels, with different strengths. Read the
+labels literally:
 
-```bash
-# Run compliance tests against your implementation
-python compliance-kit/runner/runner.py --implementation /path/to/runtime
-```
+- **Behavioral suite (pytest) — real conformance evidence.** `implementations/python/tests/`
+  exercises distinct kernel behavior, including the Execution Boundary
+  (`test_exec_does_not_interpret_r2`, verified to fail against a kernel that
+  executes R2). This is the strongest guarantee the repo currently offers.
+  ```bash
+  cd implementations/python && python -m pytest
+  ```
+- **Normative suite — pipeline smoke.** `conformance/normative/test_runner.py`
+  runs a default program end-to-end against the python and sqlite runtimes
+  (10 cases × 2 runtimes). It currently asserts only status + exit code and
+  runs the same default program for every case; each case's per-case
+  `procedure` is **documented but not yet enforced by the runner**. Treat
+  "20/20" as a pipeline smoke test, not 10 distinct scenarios.
+  ```bash
+  python conformance/normative/test_runner.py
+  ```
+- **Compliance Kit — structural validation only.** The
+  [Compliance Kit](compliance-kit/) validates that third-party *test
+  definitions* are well-formed. It does **not** yet execute implementations;
+  runtime conformance is verified by the normative runner and the pytest suite.
+  ```bash
+  python compliance-kit/runner/runner.py --implementation /path/to/runtime
+  ```
 
 See [compliance-kit/README.md](compliance-kit/README.md) for details.
 
@@ -87,15 +118,9 @@ See [compliance-kit/README.md](compliance-kit/README.md) for details.
 
 ---
 
-## Benchmark (Preliminary)
+## Benchmarks
 
-| Metric | AEP | RAG Baseline | Improvement |
-|--------|-----|--------------|-------------|
-| Tokens | 390 | 1950 | -80% |
-| Accuracy | 95% | 78% | +22% |
-| Latency | ~50ms | ~200ms | -75% |
-
-*Preliminary benchmark under controlled conditions. See [METHODOLOGY](tools/aep-benchmark/METHODOLOGY.md).*
+Protocol overhead benchmarks: planned.
 
 ---
 
@@ -162,11 +187,15 @@ MIT
 
 | Component | Status |
 |-----------|--------|
-| Specification (AEP-0001 to AEP-0008) | Stable |
-| Python Runtime | 18/18 tests passed |
-| Compliance Kit | Available |
+| Specification (AEP-0001 to AEP-0007) | Stable |
+| Specification (AEP-0008 Fault Tolerance) | Active |
+| Python Runtime — behavioral tests (pytest) | 10/10 passed |
+| Normative suite | 10 cases × 2 runtimes (pipeline smoke; see Conformance) |
+| Compliance Kit | Structural validation only (does not execute implementations) |
 | Independent Implementations | Seeking contributors |
 
-**Stage: Stable Specification with Fault Tolerance Guarantees**
-
-> AEP v1.1.0 is a stable specification with OS-level guarantees (ACID), Watchdog Timer, and protection against infinite loops. Ready for production adoption.
+**Stage: Specification with a validation-rollback execution envelope.** The
+kernel provides a Watchdog Timer and logical validation rollback (see
+AEP-0008, Active). Behavioral conformance is exercised by the pytest suite;
+the normative runner currently performs a pipeline smoke test (see
+[Conformance](#conformance)).

@@ -18,7 +18,7 @@ This directory contains the formal specification of the Agent Execution Protocol
 | [AEP-0005](AEP-0005-lifecycle.md) | Resource Lifecycle | Stable |
 | [AEP-0006](AEP-0006-simplified.md) | Simplified Execution Mode | Stable |
 | [AEP-0007](AEP-0007-profiles.md) | Compliance Profiles | Stable |
-| [AEP-0008](AEP-0008-fault-tolerance.md) | Fault Tolerance & Execution Guarantees | Stable |
+| [AEP-0008](AEP-0008-fault-tolerance.md) | Fault Tolerance & Execution Guarantees | Active |
 
 ## Normative Language
 
@@ -26,7 +26,11 @@ The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "S
 
 ## Compliance
 
-Implementations claiming AEP compliance MUST pass the [Compliance Kit](../compliance-kit/).
+Implementations claiming AEP compliance MUST pass the normative conformance
+suite (`conformance/normative/test_runner.py`) and SHOULD provide a behavioral
+test suite exercising the opcodes (see `implementations/python/tests/`). The
+[Compliance Kit](../compliance-kit/) currently performs structural validation of
+test definitions only and does not yet execute implementations.
 
 ## Quick Reference
 
