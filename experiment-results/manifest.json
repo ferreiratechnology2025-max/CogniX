@@ -1,0 +1,24 @@
+{
+  "experiment": "AEP IR LLM Generability (30 plans)",
+  "status": "calibrated (GATE 0) — generation pending",
+  "provenance": {
+    "spec_baseline": "990acf4",
+    "spec_baseline_note": "Public commit of the frozen SPEC/AEP-IR-1.0.md; the report's baseline of record.",
+    "instrument_head": "0d347bc",
+    "instrument_head_note": "Published HEAD of the calibrated instrument (validator/runner/prompt/canonical). Read-only until the REPORT: any change re-gates (new GATE 0, new hash, new pilot). This manifest commit is metadata-only, so no instrument file changed after 0d347bc."
+  },
+  "canonicalization": {
+    "library": "rfc8785",
+    "version": "0.1.4",
+    "standard": "RFC 8785 (JCS)",
+    "note": "Hard dependency (requirements.txt). The frozen Canonicalization Standard names RFC 8785; canonicaljson is NOT RFC 8785 and diverges on number serialization."
+  },
+  "spec_fixable": ["OR-1", "DAG-1"],
+  "spec_fixable_rationale": "Pre-registered BEFORE generation and frozen at GATE 0. Kept deliberately after reading the Origin Rules section of the frozen spec: OR-1 is a clear rule with three defined origins (producer, default, external scope), transmitted verbatim in prompt.md Rule 5, so a plan that still fails OR-1 is arguably violating an explicit instruction (leaning prompt/model). However, the structural trap remains a spec-design property — the class 'readonly + execution-scoped + no default' is unsatisfiable, so a generator reasoning semantically can fall into OR-1 in good faith. A conservative pre-registration that over-includes is defensible; editing the set after seeing results would be tampering. Decision: keep, deliberately.",
+  "prompt_fixable": ["CR-2", "TEC-1", "PH-3", "N-5", "BR-2"],
+  "verdict_classes": ["pass", "spec-fixable", "prompt-fixable", "unclassified"],
+  "generator": {
+    "model": null,
+    "note": "Filled at generation time (Fase 2), per-plan, in clean isolated contexts."
+  }
+}

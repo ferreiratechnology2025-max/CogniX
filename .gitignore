@@ -41,4 +41,7 @@ conformance/normative/snapshots/actual/
 
 # Partial experiment output (currently 1 of 30 plans). Results are versioned
 # only when the full 30-plan experiment has actually been run and reviewed.
-experiment-results/
+# Exception: manifest.json (frozen instrument config + run provenance) IS
+# tracked — it is the provenance record, not a partial result.
+experiment-results/*
+!experiment-results/manifest.json
