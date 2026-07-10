@@ -29,15 +29,13 @@ import subprocess
 from pathlib import Path
 from typing import Dict, List, Optional, Set
 
-try:
-    from canonicaljson import encode_canonical_json
-except ImportError:
-    # Fallback: simple canonicalization without RFC 8785
-    def encode_canonical_json(obj):
-        return json.dumps(obj, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
-
-# Add parent to path for validator import
+# Add this dir to path for the shared canonical module and validator import
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+# Canonicalization is a HARD dependency imported from the single source of
+# truth (canonical.py) — the same module ENV-5 uses in the validator, so the
+# runner's checksums and the validator's verification cannot drift.
+from canonical import canonical_bytes, checksum as canonical_checksum, CANONICAL_LIBRARY, library_version  # noqa: E402
 
 BASE_DIR = Path(__file__).parent.resolve()
 TASKS_DIR = BASE_DIR / "tasks"
@@ -56,31 +54,38 @@ def create_envelope(plan_dict: Dict) -> Dict:
     The LLM generates only the plan (plan_header + nodes + edges).
     The runner adds the envelope (canonical plan + SHA256 checksum).
     """
-    canonical_bytes = encode_canonical_json(plan_dict)
-    checksum = hashlib.sha256(canonical_bytes).hexdigest()
+    cbytes = canonical_bytes(plan_dict)
     envelope = {
-        "plan": json.loads(canonical_bytes.decode("utf-8")),
-        "checksum": checksum,
+        "plan": json.loads(cbytes.decode("utf-8")),
+        "checksum": hashlib.sha256(cbytes).hexdigest(),
     }
     return envelope
 
 
 # ── Verdict Classification ──────────────────────────────────────
 
-SPEC_FIXABLE_ERRORS = {"OR-1", "DAG-1"}
-
-PROMPT_FIXABLE_ERRORS = {"CR-2", "TEC-1", "PH-3", "N-5", "BR-2"}
+# Pre-registered at GATE 0 and FROZEN thereafter (rationale in manifest.json).
+SPEC_FIXABLE_ERRORS = frozenset({"OR-1", "DAG-1"})
+PROMPT_FIXABLE_ERRORS = frozenset({"CR-2", "TEC-1", "PH-3", "N-5", "BR-2"})
 
 
 def classify_verdict(error_categories: Set[str]) -> str:
-    """Classify errors as spec-fixable or prompt-fixable"""
+    """Classify a failure by fixability, honestly.
+
+    - pass:          no errors.
+    - spec-fixable:  at least one code is in the pre-registered SPEC_FIXABLE set.
+    - prompt-fixable: every code is in the pre-registered PROMPT_FIXABLE set.
+    - unclassified:  at least one code lies OUTSIDE SPEC_FIXABLE u PROMPT_FIXABLE.
+                     The sets are frozen at GATE 0; codes outside them are not
+                     silently folded into prompt-fixable.
+    """
     if not error_categories:
         return "pass"
-
     if error_categories & SPEC_FIXABLE_ERRORS:
         return "spec-fixable"
-    else:
+    if error_categories <= PROMPT_FIXABLE_ERRORS:
         return "prompt-fixable"
+    return "unclassified"
 
 
 # ── Pipeline Builder (Default Mode) ────────────────────────────
@@ -175,7 +180,7 @@ def validate_results():
 
     # Write CSV header
     with open(csv_path, "w", encoding="utf-8") as csv:
-        csv.write("plan_id,task,generation,status,error_categories,error_count,verdict,notes\n")
+        csv.write("plan_id,task,generation,status,error_categories,distinct_error_codes,verdict,notes\n")
 
     total_found = 0
     total_valid = 0
@@ -234,7 +239,7 @@ def validate_results():
 
         # Step 5: run validator
         result = subprocess.run(
-            ["python", str(VALIDATOR_SCRIPT), str(temp_envelope)],
+            [sys.executable, str(VALIDATOR_SCRIPT), str(temp_envelope)],
             capture_output=True,
             text=True,
         )
@@ -266,13 +271,13 @@ def validate_results():
         if result.returncode == 0 and "INVALID" not in result.stdout:
             status = "valid"
             verdict = "pass"
-            error_count = 0
+            distinct_error_codes = 0
             print(f"  [OK] {plan_id}: VALIDO")
             total_valid += 1
         else:
             status = "invalid"
             verdict = classify_verdict(error_categories)
-            error_count = len(error_categories) if error_categories else 1
+            distinct_error_codes = len(error_categories) if error_categories else 1
             print(f"  [--] {plan_id}: INVALIDO (erros: {sorted(error_categories)})")
             total_invalid += 1
 
@@ -281,7 +286,7 @@ def validate_results():
             categories_str = ";".join(sorted(error_categories)) if error_categories else ""
             csv.write(
                 f"{plan_id},{task_num},{gen_str},{status},"
-                f"{categories_str},{error_count},{verdict},\n"
+                f"{categories_str},{distinct_error_codes},{verdict},\n"
             )
 
     # Summary
@@ -339,7 +344,7 @@ def main():
             try:
                 temp_env.write_text(json.dumps(envelope, indent=2), encoding="utf-8")
                 result = subprocess.run(
-                    ["python", str(VALIDATOR_SCRIPT), str(temp_env)],
+                    [sys.executable, str(VALIDATOR_SCRIPT), str(temp_env)],
                     capture_output=True, text=True,
                 )
                 if result.returncode == 0 and "INVALID" not in result.stdout:

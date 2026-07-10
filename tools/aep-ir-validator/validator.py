@@ -15,6 +15,11 @@ import os
 from enum import Enum
 from typing import Any, Dict, List, Optional, Set
 
+# ENV-5 checksum verification uses the SAME canonicalization module the runner
+# uses to create envelopes (single source of truth — see canonical.py).
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from canonical import checksum as canonical_checksum, CANONICAL_STANDARD  # noqa: E402
+
 
 # ──────────────────────────────────────────────
 # Types
@@ -142,6 +147,28 @@ class IRValidator:
                 ValidationSeverity.ERROR, "ENV-4",
                 "Checksum field found inside plan object — checksum must live in the envelope only"
             ))
+
+        # ENV-5: the declared checksum MUST equal the SHA256 of the canonical
+        # plan (Compiled Artifact Envelope, §6.2). This is the integrity check
+        # that makes the checksum meaningful instead of decorative.
+        declared = self.plan.get("checksum")
+        plan_obj = self.plan.get("plan")
+        if declared is not None and isinstance(plan_obj, (dict, list)):
+            try:
+                recomputed = canonical_checksum(plan_obj)
+            except Exception as e:
+                self.findings.append(ValidationFinding(
+                    ValidationSeverity.ERROR, "ENV-5",
+                    f"Could not verify checksum ({CANONICAL_STANDARD}): {e}"
+                ))
+            else:
+                if declared != recomputed:
+                    self.findings.append(ValidationFinding(
+                        ValidationSeverity.ERROR, "ENV-5",
+                        f"Checksum mismatch: envelope declares "
+                        f"{str(declared)[:16]}... but the canonical plan hashes "
+                        f"to {recomputed[:16]}..."
+                    ))
 
     # ── PlanHeader (§5.4) ───────────────────────
 
@@ -792,10 +819,20 @@ class IRValidator:
 
     def _validate_input_origins(self):
         """
-        Validate that every node's input bindings have a defined origin.
-        An input binding must either:
-        - Be produced as an output by some other node (traced through edges), OR
-        - Have a 'default' value in its declaration.
+        Validate that every node's input binding has a defined origin, per the
+        AEP-IR Origin Rules (SPEC/AEP-IR-1.0.md, "Origin Rules" section).
+
+        A binding has a defined origin if and only if AT LEAST ONE holds:
+          1. Producer: some node declares a BindingRef with access:write to it.
+          2. Default value: its declaration has a non-null 'default' field.
+          3. External scope: scope is 'session' or 'persistent' (the value
+             originates from the execution environment or persistent storage
+             outside the current plan).
+
+        Bindings with scope 'execution' that have no producer and no default
+        MUST fail OR-1. (This docstring previously listed only two origins; the
+        code already implemented all three — the third, external scope, is
+        normative in the Origin Rules section.)
         """
         plan = self.plan.get("plan")
         if not isinstance(plan, dict):
