@@ -16,13 +16,17 @@ The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "S
 
 ## 3. Conformance Requirements
 
-A conforming implementation MUST:
-1. Implement all six opcodes
+A conforming implementation MUST (Full conformance):
+1. Implement all six core opcodes (BOOT, LOAD, VALIDATE, EXEC, COMMIT, EXIT)
 2. Follow all contracts
 3. Maintain R0-R7 registers
 4. Support Resource protocol
 5. Persist state across sessions
 6. Use Git for history
+
+The seventh opcode, YIELD, is a conditional extension defined in AEP-0008
+(required if and only if the implementation enforces a Watchdog Timer). Reduced
+conformance classes are defined in AEP-0007.
 
 ## 4. Test Suite
 
@@ -120,9 +124,12 @@ A conforming implementation MUST:
 | Level | Requirements |
 |-------|-------------|
 | Basic | BOOT, LOAD, VALIDATE |
-| Standard | All 6 opcodes |
+| Standard | All 6 core opcodes |
 | Advanced | + Dependency resolution |
 | Complete | + Custom Resources |
+
+YIELD is orthogonal to these levels: it is governed by the conditional rule in
+AEP-0008 (required iff the implementation enforces a Watchdog Timer).
 
 ## 6. Test Report Template
 

@@ -90,13 +90,17 @@ EXIT
 
 ## 6. Implementation Requirements
 
-A conforming implementation:
-- MUST implement all six opcodes
+A conforming implementation (Full conformance):
+- MUST implement all six core opcodes (BOOT, LOAD, VALIDATE, EXEC, COMMIT, EXIT)
 - MUST follow all contracts
 - MUST maintain R0-R7 registers
 - MUST support Resource protocol
 - MUST persist state across sessions
 - MUST use Git for history
+
+A seventh opcode, YIELD, is defined as a conditional extension in AEP-0008
+(required if and only if the implementation enforces a Watchdog Timer). Reduced
+conformance classes are defined in AEP-0007.
 
 ## 7. Extensibility
 
@@ -115,10 +119,10 @@ AEP is an execution *envelope*: it governs state, cycles, transactions, and
 error recovery, but it does not execute task payloads. The kernel's attack
 surface is therefore limited to three operations:
 
-1. **Opcode parsing.** The kernel parses a fixed, closed set of opcodes
-   (BOOT, LOAD, VALIDATE, EXEC, COMMIT, EXIT, YIELD). Unknown opcodes MUST
-   fail without side effects. Opcode arguments are the only agent-controlled
-   input the kernel acts upon.
+1. **Opcode parsing.** The kernel parses a fixed, closed set of opcodes — the
+   six core opcodes plus the conditional YIELD extension (AEP-0008). The set
+   remains closed: unknown opcodes MUST fail without side effects. Opcode
+   arguments are the only agent-controlled input the kernel acts upon.
 
 2. **Resource ID resolution.** `LOAD`/`VALIDATE` resolve a `resource_id` to a
    file path. Implementations MUST reject any `resource_id` that is not a

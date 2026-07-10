@@ -84,7 +84,7 @@ EXIT
 
 ## 3. Instruction Set Architecture (ISA)
 
-The protocol defines exactly six opcodes:
+The protocol defines exactly six core opcodes (a seventh, YIELD, is a conditional extension defined in AEP-0008):
 
 ### 3.1 BOOT
 **Purpose:** Initialize the system.
@@ -224,8 +224,8 @@ The protocol defines exactly six opcodes:
 
 ## 6. Conformance
 
-A conforming implementation must:
-1. Implement all six opcodes
+A conforming implementation must (Full conformance):
+1. Implement all six core opcodes (YIELD is a conditional extension, AEP-0008)
 2. Follow all contracts
 3. Maintain R0-R7 registers
 4. Support Resource protocol
@@ -276,7 +276,7 @@ New Resource types can be added without changing the protocol:
 
 ## Appendix B: Compliance Checklist
 
-- [ ] All 6 opcodes implemented
+- [ ] All 6 core opcodes implemented
 - [ ] R0-R7 maintained correctly
 - [ ] R3 contains only delta
 - [ ] VALIDATE checks all fields

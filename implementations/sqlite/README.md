@@ -6,7 +6,7 @@ Implementação do Agent Execution Protocol (AEP) usando SQLite como backend.
 
 **Características:**
 - ✅ Armazenamento em SQLite (sem Markdown)
-- ✅ 6 opcodes implementados
+- ✅ 6 core opcodes implementados
 - ✅ Schema normalizado (Resources + Dependencies)
 - ✅ Importação de Resources Markdown
 - ✅ Independente de formato

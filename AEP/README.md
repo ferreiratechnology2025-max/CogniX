@@ -57,7 +57,7 @@ test definitions only and does not yet execute implementations.
 | EXEC | Execute current task |
 | COMMIT | Persist changes (ACID transaction) |
 | EXIT | End session |
-| YIELD | Request watchdog extension |
+| YIELD | Request watchdog extension (conditional — see AEP-0008) |
 
 ### Error Codes
 

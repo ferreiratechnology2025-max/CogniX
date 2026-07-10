@@ -128,11 +128,27 @@ the task itself are OUT OF SCOPE for this protocol.
 
 ## 4. Execution Flow
 
+The core flow consists of the six core opcodes:
+
 ```
 BOOT → LOAD → VALIDATE → EXEC → COMMIT → EXIT
 ```
 
-A conforming agent MUST execute opcodes in this order.
+A conforming agent MUST execute the core opcodes in this order.
+
+### 4.1 Conditional Branch — YIELD
+
+YIELD is a conditional extension (AEP-0008), not part of the core flow. It is
+**agent-initiated**: when the Watchdog Timer (R1) approaches 0, the agent emits
+YIELD to request additional cycles before returning to the EXEC cycle:
+
+```
+… EXEC → YIELD? → (back to the cycle while R1 > 0)
+```
+
+The full contract has two sides — the agent's obligation to emit YIELD before
+`R1 == 0` and the runtime's obligation to implement YIELD when it enforces a
+Watchdog Timer. Both are defined normatively in AEP-0008 (§1.1 and §1.4).
 
 ## 5. Error Handling
 

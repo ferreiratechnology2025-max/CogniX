@@ -22,7 +22,7 @@ AEP is a protocol that provides a deterministic execution envelope for AI agents
 
 - **Structured files** — Markdown, JSON, YAML, or any structured format
 - **Universal Resource protocol** — all artifacts follow the same pattern
-- **7 opcodes** — BOOT, LOAD, VALIDATE, EXEC, COMMIT, EXIT, YIELD
+- **6 core opcodes** — BOOT, LOAD, VALIDATE, EXEC, COMMIT, EXIT — plus YIELD (conditional extension, AEP-0008)
 - **Immutable kernel** — the kernel never changes, only programs and resources
 - **Minimal state** — registers maintain only the current session delta
 

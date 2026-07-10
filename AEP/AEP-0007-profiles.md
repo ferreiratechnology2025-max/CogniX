@@ -10,6 +10,12 @@
 
 O AEP define dois perfis de conformidade para atender diferentes necessidades de implementação.
 
+Os perfis abaixo são **classes de conformidade reduzida**: subconjuntos legais da
+conformidade Full definida em AEP-0001 §6 (os seis opcodes de núcleo). Um perfil
+reduzido pode legitimamente omitir opcodes de núcleo conforme declarado abaixo.
+O opcode YIELD é uma extensão condicional (AEP-0008), independente da escolha de
+perfil.
+
 ## 2. AEP Lite Profile
 
 ### 2.1 Descrição
@@ -21,9 +27,10 @@ Perfil mínimo para agentes com restrição de recursos.
 - `COMMIT` — Persiste mudanças
 
 ### 2.3 Opcodes Opcionais
-- `BOOT` — Não obrigatório
+- `BOOT` — Não obrigatório (omitido legitimamente neste perfil)
 - `VALIDATE` — Não obrigatório
 - `EXIT` — Não obrigatório
+- `YIELD` — governed by the conditional rule in AEP-0008 (required iff the implementation enforces a Watchdog Timer)
 
 ### 2.4 Casos de Uso
 - Agentes de borda (edge)
@@ -49,7 +56,8 @@ Perfil completo para sistemas enterprise.
 - `EXIT` — Encerra sessão
 
 ### 3.3 Opcodes Opcionais
-- `BOOT` — Recomendado
+- `BOOT` — Recomendado (pode ser legitimamente omitido neste perfil)
+- `YIELD` — governed by the conditional rule in AEP-0008 (required iff the implementation enforces a Watchdog Timer)
 
 ### 3.4 Casos de Uso
 - Sistemas corporativos

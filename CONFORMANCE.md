@@ -19,9 +19,10 @@ A conforming agent is an AI system that correctly interprets and executes the KO
 - [ ] Must load `KERNEL/STATE.md` and `KERNEL/PROGRAM.md`
 
 ### 2.2 ISA Execution
-- [ ] Must execute all 6 opcodes: BOOT, LOAD, VALIDATE, EXEC, COMMIT, EXIT
+- [ ] Must execute all 6 core opcodes: BOOT, LOAD, VALIDATE, EXEC, COMMIT, EXIT
 - [ ] Must follow the contracts defined in ISA.md
 - [ ] Must not skip or reorder opcodes
+- [ ] YIELD: conditional extension (AEP-0008) — required iff the implementation enforces a Watchdog Timer
 
 ### 2.3 Resource Protocol
 - [ ] Must validate all Resources have: type, id, version, depends, status
@@ -108,7 +109,7 @@ Status: ___________________
 - VALIDATE implemented
 
 ### Level 2: Standard
-- All 6 opcodes implemented
+- All 6 core opcodes implemented
 - Basic state management
 
 ### Level 3: Advanced

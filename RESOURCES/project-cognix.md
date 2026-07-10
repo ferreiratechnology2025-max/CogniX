@@ -11,7 +11,7 @@ status: active
 Construir um sistema de gerenciamento de conhecimento para agentes de IA baseado em Markdown puro.
 
 ## ESCOPO
-- Kernel com ISA de 6 opcodes
+- Kernel com ISA de 6 core opcodes + YIELD (extensão condicional, AEP-0008)
 - Protocolo universal de Resources
 - Sistema de Skills extensível
 - Integração com qualquer CLI de IA

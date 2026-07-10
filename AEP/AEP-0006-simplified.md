@@ -31,7 +31,7 @@ BOOT, VALIDATE, EXIT são RECOMENDADOS mas não OBRIGATÓRIOS.
 ## 4. Uso
 
 Agentes podem optar por:
-- **Modo Completo:** Todos os 6 opcodes
+- **Modo Completo:** Todos os 6 opcodes de núcleo
 - **Modo Simplificado:** Apenas LOAD, EXEC, COMMIT
 
 A escolha depende da complexidade do caso de uso.

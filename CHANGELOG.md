@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.2.0] - unreleased
+
+### Added
+- AEP-0008 §1.4 (YIELD — Conditional Requirement): YIELD is a conditional extension opcode. Watchdog-enforcing implementations MUST implement it; others MAY omit it.
+- Explicit conformance scope: AEP-0001 §6 / AEP-0004 define Full conformance as the six core opcodes; AEP-0007 profiles are reduced conformance classes (legal subsets).
+- ERR_AEP_0003_E003 (invalid resource id) documented in the AEP-0008 and AEP/README error registers.
+
+### Changed
+- ISA composition wording reconciled across AEP-0001/0003/0004/0007/0008, README, and SPECIFICATION: "six core opcodes + YIELD (conditional extension)" instead of contradictory "six" vs "seven" claims.
+
+### Notes
+- Normative-additive only; no implementation conformant under 1.1.0 becomes non-conformant. Release date deferred to the reviewer.
+
 ## [1.1.0] - 2026-07-06
 
 ### Added
