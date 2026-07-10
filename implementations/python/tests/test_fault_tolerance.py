@@ -221,6 +221,28 @@ status: active
         leftovers = [f for f in os.listdir(kernel_dir) if f.endswith(".tmp")]
         self.assertEqual(leftovers, [], f"leftover temp files: {leftovers}")
 
+    def test_yield_modifies_only_r1(self):
+        """AEP-0008 §1.4: YIELD MUST extend R1 [WATCHDOG] and MUST NOT modify
+        any other register. Strict equality on every register except R1 (no
+        bookkeeping exception — yield_cycles writes only R1). Verified to fail
+        against a kernel where YIELD also writes R3/R5.
+        """
+        before = self.kernel.state_manager.load_state().get_all_registers()
+
+        result = self.kernel.yield_cycles("need more cycles", 3)
+        self.assertEqual(result["status"], "OK")
+
+        after = self.kernel.state_manager.load_state().get_all_registers()
+
+        # R1 extended by exactly the requested cycles.
+        self.assertEqual(int(after["R1"]), int(before["R1"]) + 3)
+        # Every other register byte-for-byte unchanged.
+        for reg in ["R0", "R2", "R3", "R4", "R5", "R6", "R7"]:
+            self.assertEqual(
+                after.get(reg), before.get(reg),
+                f"YIELD modified {reg} — AEP-0008 §1.4 invariant violated",
+            )
+
     def test_complete_program_with_yield(self):
         """Testa um programa completo com YIELD"""
         # Cria resource válido

@@ -24,10 +24,10 @@ which is the strongest conformance evidence in the repo.
 
 | Metric | Value |
 |--------|-------|
-| Test cases | 10 |
+| Test cases | 11 |
 | Runtimes | 2 (python, sqlite) |
-| Executions | 20 |
-| Passed | 20 |
+| Executions | 22 |
+| Passed | 22 |
 | Failed | 0 |
 
 Prior to the UTF-8 hotfix this suite reported 0/20 on legacy code pages
@@ -38,8 +38,8 @@ previously committed under `snapshots/actual/` captured that failing state.
 
 | Metric | Value |
 |--------|-------|
-| Tests | 12 |
-| Passed | 12 |
+| Tests | 13 |
+| Passed | 13 |
 | Failed | 0 |
 
 Includes `test_exec_does_not_interpret_r2`, verified to fail against a mutated

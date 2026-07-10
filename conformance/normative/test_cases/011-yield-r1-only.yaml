@@ -1,0 +1,23 @@
+id: TC-011-yield-r1-only
+name: Yield Opcode - Modifies Only R1
+description: >
+  Validate the AEP-0008 §1.4 invariant: a YIELD instruction MUST extend
+  R1 [WATCHDOG] and MUST NOT modify any other register or resource. This case
+  documents the invariant in the normative corpus; mechanical enforcement lives
+  in the behavioral pytest suite (test_yield_modifies_only_r1), because the
+  normative runner is a pipeline smoke test (see conformance-report.md, #14).
+
+preconditions:
+  - A Watchdog Timer (R1) is enforced by the runtime
+
+procedure:
+  - Capture all registers R0-R7
+  - YIELD (request N cycles)
+  - Verify R1 increased by exactly N
+  - Verify R0, R2, R3, R4, R5, R6, R7 are unchanged
+
+expected:
+  status: "OK"
+  exit_code: 0
+
+tags: [yield, watchdog, invariant, smoke, conditional]

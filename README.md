@@ -6,8 +6,8 @@
 
 [![Status: Stable](https://img.shields.io/badge/status-stable-brightgreen)]()
 [![Version: 1.1.0](https://img.shields.io/badge/version-1.1.0-blue)]()
-[![Behavioral tests: 12/12](https://img.shields.io/badge/pytest-12%2F12-brightgreen)]()
-[![Normative: smoke 20/20](https://img.shields.io/badge/normative-smoke%2020%2F20-yellow)]()
+[![Behavioral tests: 13/13](https://img.shields.io/badge/pytest-13%2F13-brightgreen)]()
+[![Normative: smoke 22/22](https://img.shields.io/badge/normative-smoke%2022%2F22-yellow)]()
 [![Implementations: 3](https://img.shields.io/badge/implementations-3-blue)]()
 
 ---
@@ -61,8 +61,8 @@ For the pure specification without implementation details, see [AEP/README.md](A
 | Implementation | Status | Conformance | Notes |
 |----------------|--------|-------------|-------|
 | Reference (Markdown) | Stable | N/A — executable conformance not applicable (LLM-interpreted) | KOS v6.0 |
-| Python | Stable | pytest 12/12 behavioral; normative smoke 10 | Watchdog + validation rollback |
-| SQLite | Stable | normative smoke 10 (no behavioral suite yet) | Indexer & complex resource querying |
+| Python | Stable | pytest 13/13 behavioral; normative smoke 11 | Watchdog + validation rollback |
+| SQLite | Stable | normative smoke 11 (no behavioral suite yet) | Indexer & complex resource querying |
 
 ---
 
@@ -99,10 +99,10 @@ labels literally:
   ```
 - **Normative suite — pipeline smoke.** `conformance/normative/test_runner.py`
   runs a default program end-to-end against the python and sqlite runtimes
-  (10 cases × 2 runtimes). It currently asserts only status + exit code and
+  (11 cases × 2 runtimes). It currently asserts only status + exit code and
   runs the same default program for every case; each case's per-case
   `procedure` is **documented but not yet enforced by the runner**. Treat
-  "20/20" as a pipeline smoke test, not 10 distinct scenarios.
+  "22/22" as a pipeline smoke test, not 11 distinct scenarios.
   ```bash
   python conformance/normative/test_runner.py
   ```
@@ -198,8 +198,8 @@ MIT
 |-----------|--------|
 | Specification (AEP-0001 to AEP-0007) | Stable |
 | Specification (AEP-0008 Fault Tolerance) | Active |
-| Python Runtime — behavioral tests (pytest) | 12/12 passed |
-| Normative suite | 10 cases × 2 runtimes (pipeline smoke; see Conformance) |
+| Python Runtime — behavioral tests (pytest) | 13/13 passed |
+| Normative suite | 11 cases × 2 runtimes (pipeline smoke; see Conformance) |
 | Compliance Kit | Structural validation only (does not execute implementations) |
 | Independent Implementations | Seeking contributors |
 
