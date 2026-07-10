@@ -38,8 +38,8 @@ previously committed under `snapshots/actual/` captured that failing state.
 
 | Metric | Value |
 |--------|-------|
-| Tests | 10 |
-| Passed | 10 |
+| Tests | 12 |
+| Passed | 12 |
 | Failed | 0 |
 
 Includes `test_exec_does_not_interpret_r2`, verified to fail against a mutated

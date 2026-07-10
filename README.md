@@ -6,7 +6,7 @@
 
 [![Status: Stable](https://img.shields.io/badge/status-stable-brightgreen)]()
 [![Version: 1.1.0](https://img.shields.io/badge/version-1.1.0-blue)]()
-[![Behavioral tests: 10/10](https://img.shields.io/badge/pytest-10%2F10-brightgreen)]()
+[![Behavioral tests: 12/12](https://img.shields.io/badge/pytest-12%2F12-brightgreen)]()
 [![Normative: smoke 20/20](https://img.shields.io/badge/normative-smoke%2020%2F20-yellow)]()
 [![Implementations: 3](https://img.shields.io/badge/implementations-3-blue)]()
 
@@ -61,7 +61,7 @@ For the pure specification without implementation details, see [AEP/README.md](A
 | Implementation | Status | Conformance | Notes |
 |----------------|--------|-------------|-------|
 | Reference (Markdown) | Stable | N/A — executable conformance not applicable (LLM-interpreted) | KOS v6.0 |
-| Python | Stable | pytest 10/10 behavioral; normative smoke 10 | Watchdog + validation rollback |
+| Python | Stable | pytest 12/12 behavioral; normative smoke 10 | Watchdog + validation rollback |
 | SQLite | Stable | normative smoke 10 (no behavioral suite yet) | Indexer & complex resource querying |
 
 ---
@@ -198,7 +198,7 @@ MIT
 |-----------|--------|
 | Specification (AEP-0001 to AEP-0007) | Stable |
 | Specification (AEP-0008 Fault Tolerance) | Active |
-| Python Runtime — behavioral tests (pytest) | 10/10 passed |
+| Python Runtime — behavioral tests (pytest) | 12/12 passed |
 | Normative suite | 10 cases × 2 runtimes (pipeline smoke; see Conformance) |
 | Compliance Kit | Structural validation only (does not execute implementations) |
 | Independent Implementations | Seeking contributors |
