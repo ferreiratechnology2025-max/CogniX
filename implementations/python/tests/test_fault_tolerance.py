@@ -142,6 +142,35 @@ status: active
         self.assertEqual(result["status"], "OK")
         self.assertEqual(result["watchdog_remaining"], 4)
 
+    def test_exec_does_not_interpret_r2(self):
+        """AEP-0003 s3.4: EXEC MUST treat R2 as opaque (never execute it).
+
+        Sets R2 to an executable-looking payload and asserts the kernel runs
+        the EXEC cycle normally, returns R2 unchanged, and produces no side
+        effect from R2's contents. This is the mechanical enforcement of the
+        Execution Boundary: if any implementation makes EXEC eval/dispatch R2,
+        this test breaks.
+        """
+        payload = "rm -rf / ; __import__('os').system('touch pwned')"
+
+        state = self.kernel.state_manager.load_state()
+        state.set_register("R2", payload)
+        self.kernel.state_manager.save_state(state)
+
+        result = self.kernel.exec()
+
+        # Cycle completes normally, R2 returned verbatim (opaque).
+        self.assertEqual(result["status"], "OK")
+        self.assertEqual(result["task"], payload)
+        # Watchdog decremented exactly once (5 -> 4).
+        self.assertEqual(result["watchdog_remaining"], 4)
+        # No side effect from R2's contents: the payload's "touch pwned"
+        # must never have run.
+        self.assertFalse(
+            os.path.exists(os.path.join(self.test_dir, "pwned")),
+            "EXEC executed R2 contents — Execution Boundary violated",
+        )
+
     def test_complete_program_with_yield(self):
         """Testa um programa completo com YIELD"""
         # Cria resource válido

@@ -1,0 +1,26 @@
+id: TC-010-exec-opacity
+name: Exec Opcode - Kernel Must Not Interpret R2
+description: >
+  Validate that the kernel treats R2 [NEXT_ACT] as an opaque value. When R2
+  contains content that would appear executable (shell commands, source code),
+  the kernel MUST run the EXEC cycle normally without interpreting, evaluating,
+  or executing that content. See AEP-0003 section 3.4 (Execution Boundary).
+
+preconditions:
+  - R2 [NEXT_ACT] contains executable-looking content, e.g. "rm -rf /"
+
+procedure:
+  - Set R2 to an executable-looking payload
+  - EXEC
+  - Verify the EXEC cycle completes normally
+  - Verify R2 is returned unchanged (opaque), never executed
+  - Verify R1 [WATCHDOG] decremented exactly once
+
+expected:
+  status: "OK"
+  state:
+    r1_last_act: "pattern:*"
+    r7_timestamp: "pattern:YYYY-MM-DDTHH:MM:SSZ"
+  exit_code: 0
+
+tags: [exec, security, opacity, boundary]
