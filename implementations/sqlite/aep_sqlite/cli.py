@@ -13,6 +13,15 @@ from .kernel import AEPKernelSQLite
 
 
 def main():
+    # Ensure UTF-8 stdout/stderr so opcode logs (which include Unicode glyphs)
+    # do not crash on legacy code pages (e.g. cp1252 on Windows).
+    for stream in (sys.stdout, sys.stderr):
+        if getattr(stream, "encoding", None) and stream.encoding.lower() != "utf-8":
+            try:
+                stream.reconfigure(encoding="utf-8")
+            except (AttributeError, ValueError):
+                pass
+
     parser = argparse.ArgumentParser(
         description="AEP v1.0.0 - SQLite Implementation"
     )
