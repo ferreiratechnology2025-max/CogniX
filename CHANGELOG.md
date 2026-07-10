@@ -1,5 +1,30 @@
 # Changelog
 
+## [1.1.0] - 2026-07-06
+
+### Added
+- AEP-0006 (Simplified Execution Mode): Modo de execução simplificado para edge agents
+- AEP-0007 (Compliance Profiles): Perfis de conformidade (Lite, Extended)
+- AEP-0008 (Fault Tolerance): Watchdog Timer, transações atômicas de validação, ROLLBACK→R4
+- Opcode YIELD: Permite agentes solicitarem ciclos adicionais ao watchdog
+- Conformance Suite: 9 normative test cases, executed against 2 runtimes (18 executions)
+- Compliance Kit: validação estrutural de definições de teste (não executa implementações; conformidade de runtime via suíte normativa + pytest)
+
+### Changed
+- R1 [WATCHDOG]: Agora extensível via instrução YIELD (antes fixo)
+
+### Deprecated
+Nenhum
+
+### Removed
+Nenhum
+
+### Fixed
+Nenhum
+
+### Security
+Nenhuma vulnerabilidade conhecida
+
 ## [1.0.0] - 2026-07-05
 
 ### Added
