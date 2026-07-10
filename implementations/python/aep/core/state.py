@@ -4,6 +4,7 @@ State management for AEP
 
 import os
 import re
+import tempfile
 from typing import Dict, Any, Optional
 
 
@@ -26,11 +27,21 @@ class StateManager:
         return State.from_markdown(content)
     
     def save_state(self, state: 'State') -> bool:
-        """Save state to file"""
+        """Save state to file atomically (write to a temp file in the same
+        directory, then os.replace) so the state file is never left empty or
+        partially written if the process dies mid-write."""
         content = state.to_markdown()
-        os.makedirs(os.path.dirname(self.state_path), exist_ok=True)
-        with open(self.state_path, 'w', encoding='utf-8') as f:
-            f.write(content)
+        target_dir = os.path.dirname(self.state_path)
+        os.makedirs(target_dir, exist_ok=True)
+        fd, tmp_path = tempfile.mkstemp(dir=target_dir, suffix=".tmp")
+        try:
+            with os.fdopen(fd, 'w', encoding='utf-8') as f:
+                f.write(content)
+            os.replace(tmp_path, self.state_path)
+        except BaseException:
+            if os.path.exists(tmp_path):
+                os.remove(tmp_path)
+            raise
         return True
     
     def load_program(self) -> list:

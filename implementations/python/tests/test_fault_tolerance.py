@@ -171,6 +171,56 @@ status: active
             "EXEC executed R2 contents — Execution Boundary violated",
         )
 
+    def test_load_rejects_path_traversal(self):
+        """LOAD with a traversal id yields a structured error and does NOT read
+        outside RESOURCES/. Verified to fail against the pre-fix loader, which
+        resolved '../secret' to a file outside the resources directory.
+        """
+        # Plant a secret OUTSIDE the RESOURCES directory.
+        secret = os.path.join(self.test_dir, "secret.md")
+        with open(secret, "w", encoding="utf-8") as f:
+            f.write("---\ntype: project\nid: secret\nversion: 1.0.0\n"
+                    "status: active\n---\nTOP SECRET")
+
+        result = self.kernel.load("../secret")
+
+        self.assertEqual(result["status"], "FAIL")
+        self.assertEqual(result.get("error_code"), "ERR_AEP_0003_E003")
+        # The traversal id must never have been resolved/loaded.
+        self.assertNotIn("../secret", self.kernel.loaded_resources)
+        self.assertIsNone(
+            self.kernel.resource_manager.load_resource("../secret"),
+            "resource loader resolved a path outside RESOURCES/",
+        )
+
+    def test_save_state_is_atomic(self):
+        """save_state writes to a temp file in the target dir + os.replace, so
+        the state file is never empty/partial and no .tmp files linger.
+        """
+        import aep.core.state as state_mod
+        calls = []
+        original_replace = os.replace
+
+        def spy_replace(src, dst):
+            calls.append((src, dst))
+            return original_replace(src, dst)
+
+        state_mod.os.replace = spy_replace
+        try:
+            st = self.kernel.state_manager.load_state()
+            st.set_register("R2", "atomic-write-check")
+            self.kernel.state_manager.save_state(st)
+        finally:
+            state_mod.os.replace = original_replace
+
+        # Atomic mechanism used, content is complete, no temp files left behind.
+        self.assertTrue(calls, "save_state did not use os.replace")
+        reloaded = self.kernel.state_manager.load_state()
+        self.assertEqual(reloaded.get_register("R2"), "atomic-write-check")
+        kernel_dir = os.path.dirname(self.kernel.state_manager.state_path)
+        leftovers = [f for f in os.listdir(kernel_dir) if f.endswith(".tmp")]
+        self.assertEqual(leftovers, [], f"leftover temp files: {leftovers}")
+
     def test_complete_program_with_yield(self):
         """Testa um programa completo com YIELD"""
         # Cria resource válido

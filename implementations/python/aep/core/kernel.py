@@ -117,6 +117,13 @@ class AEPKernel:
                 "error": "LOAD: Watchdog timer expired. Use YIELD to request more cycles."
             }
 
+        if not self.resource_manager.is_valid_resource_id(resource_id):
+            return {
+                "status": "FAIL",
+                "error": f"Invalid resource id: '{resource_id}'",
+                "error_code": "ERR_AEP_0003_E003"
+            }
+
         resource = self.resource_manager.load_resource(resource_id)
         if not resource:
             return {
@@ -161,6 +168,13 @@ class AEPKernel:
             return {
                 "status": "FAIL",
                 "error": "VALIDATE: Watchdog timer expired. Use YIELD to request more cycles."
+            }
+
+        if not self.resource_manager.is_valid_resource_id(resource_id):
+            return {
+                "status": "FAIL",
+                "error": f"Invalid resource id: '{resource_id}'",
+                "error_code": "ERR_AEP_0003_E003"
             }
 
         if resource_id not in self.loaded_resources:

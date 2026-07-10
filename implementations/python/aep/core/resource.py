@@ -9,16 +9,29 @@ from typing import Dict, Any, Optional, List
 VALID_TYPES = ['project', 'status', 'skill', 'adr', 'incident', 'rule', 'template']
 VALID_STATUS = ['draft', 'review', 'active', 'deprecated', 'archived']
 
+# A resource_id is a plain identifier. Anything else (path separators, "..",
+# drive letters, dots) is rejected before it is ever joined into a filesystem
+# path, so resolution cannot escape the resources directory (path traversal).
+RESOURCE_ID_RE = re.compile(r'^[a-zA-Z0-9_-]+$')
+
 
 class ResourceManager:
     """Manage AEP Resources"""
-    
+
     def __init__(self, base_path: str = "."):
         self.base_path = base_path
         self.resources_path = os.path.join(base_path, "RESOURCES")
-    
+
+    @staticmethod
+    def is_valid_resource_id(resource_id: Any) -> bool:
+        """True only for plain identifiers safe to resolve to a file path."""
+        return isinstance(resource_id, str) and bool(RESOURCE_ID_RE.match(resource_id))
+
     def load_resource(self, resource_id: str) -> Optional[Dict[str, Any]]:
         """Load a resource by ID"""
+        # Reject non-identifier ids before building any path (traversal guard).
+        if not self.is_valid_resource_id(resource_id):
+            return None
         # Try .md first
         file_path = os.path.join(self.resources_path, f"{resource_id}.md")
         if not os.path.exists(file_path):
