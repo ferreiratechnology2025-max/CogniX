@@ -4,8 +4,8 @@
   "provenance": {
     "spec_baseline": "990acf4",
     "spec_baseline_note": "Public commit of the frozen SPEC/AEP-IR-1.0.md; the report's baseline of record.",
-    "instrument_head": "0d347bc",
-    "instrument_head_note": "Published HEAD of the calibrated instrument (validator/runner/prompt/canonical). Read-only until the REPORT: any change re-gates (new GATE 0, new hash, new pilot). This manifest commit is metadata-only, so no instrument file changed after 0d347bc."
+    "instrument_head": "cc7dd41",
+    "instrument_head_note": "Published HEAD of the calibrated instrument (validator/runner/prompt/canonical). Read-only until the REPORT: any change re-gates (new GATE 0, new hash, new pilot). Advanced 0d347bc -> cc7dd41: a pre-generation re-gate that added the '## Edge Structure' schema clarification to prompt.md (source/target keys; from/to rejected) and regenerated all 30 pipeline/*/input-coder.md. Legitimate because NO real API generations existed yet — caught by the mechanics dry-run. This manifest commit is metadata-only, so no instrument file changed after cc7dd41; instrument_head remains cc7dd41."
   },
   "canonicalization": {
     "library": "rfc8785",
