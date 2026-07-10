@@ -63,7 +63,19 @@ Output ONLY the `plan` object (plan_header + nodes + edges). Do NOT include a ch
 2. Every binding used by a node must be declared in PlanHeader
 3. Every node must have a unique ID
 4. Every node must declare its effects explicitly
-5. Every node's inputs must have defined origins
+5. Every node's input binding must have a **defined origin**. Per the AEP-IR
+   Origin Rules, a binding has a defined origin if and only if at least one of
+   the following holds:
+   (a) **Producer**: some node in the plan writes to it (a BindingRef with
+       `access: write` targets it);
+   (b) **Default value**: its declaration includes a non-null `default` field;
+   (c) **External scope**: it has `scope: session` or `scope: persistent` (the
+       value originates from the execution environment or persistent storage,
+       outside the current plan).
+   A binding with `scope: execution` that has no producer and no default is
+   INVALID (rejected under OR-1). Therefore, external inputs the plan consumes
+   but does not itself compute (feeds, documents, prior state) MUST be declared
+   `scope: session` or `scope: persistent`.
 6. Capability requirements must be satisfied by PlanHeader
 7. Type restrictions must be satisfied
 8. Mutable binding conflicts must be detectable
