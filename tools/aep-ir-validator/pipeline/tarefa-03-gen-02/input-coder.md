@@ -48,6 +48,16 @@ Output ONLY the `plan` object (plan_header + nodes + edges). Do NOT include a ch
 }
 ```
 
+## Edge Structure
+
+Each edge is an object with exactly two string fields, `source` and `target`,
+whose values MUST be `id`s of declared nodes. Do NOT use `from`/`to` — those
+keys are rejected by the schema.
+
+```json
+{ "source": "node-001", "target": "node-002" }
+```
+
 ## Type-Effect Consistency Rules
 
 | Node type       | Required effects | Prohibited effects |
@@ -99,7 +109,8 @@ Output ONLY the `plan` object (plan_header + nodes + edges). Do NOT include a ch
    - Declare required `capabilities`
    - Set `inputs` and `outputs` as BindingRefs
    - Populate `payload` with relevant parameters
-4. Define `edges` to capture data dependencies between nodes.
+4. Define `edges` to capture data dependencies between nodes. Each edge is
+   `{ "source": "<node-id>", "target": "<node-id>" }` (string node ids; not `from`/`to`).
 5. Ensure all capabilities used across nodes are declared in `plan_header.declared_capabilities`.
 6. Ensure the graph is acyclic.
 
