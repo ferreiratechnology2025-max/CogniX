@@ -1,0 +1,40 @@
+{
+  "experiment_date": "2026-07-07T09:57:35.204709",
+  "validator_version": "1.0.0",
+  "spec": "AEP-IR-1.0",
+  "total_tasks": 2,
+  "results": [
+    {
+      "task": "invalid-plan-multiple-errors.json",
+      "file": "test_plans\\invalid-plan-multiple-errors.json",
+      "status": "validated",
+      "valid": false,
+      "errors": 33,
+      "rejection_modes": {
+        "X-1": 4,
+        "N-7": 1,
+        "N-21": 1,
+        "DAG-1": 1,
+        "BU-1": 1,
+        "CC-1": 1,
+        "CC-2": 2,
+        "TEC-2": 2,
+        "TEC-1": 2,
+        "CR-1": 6,
+        "CR-2": 5,
+        "CR-3": 6,
+        "OR-1": 1
+      }
+    },
+    {
+      "task": "valid-plan.json",
+      "file": "test_plans\\valid-plan.json",
+      "status": "validated",
+      "valid": false,
+      "errors": 1,
+      "rejection_modes": {
+        "OR-1": 1
+      }
+    }
+  ]
+}

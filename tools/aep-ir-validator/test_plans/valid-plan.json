@@ -1,0 +1,69 @@
+{
+  "plan": {
+    "plan_header": {
+      "ir_version": "1.0.0",
+      "plan_id": "plan-valid-test-001",
+      "declared_capabilities": ["memory_rw", "tool_execution"],
+      "declared_bindings": [
+        {
+          "name": "input_doc",
+          "type": "object",
+          "mutability": "readonly",
+          "scope": "session",
+          "capability": "memory_rw",
+          "default": null
+        },
+        {
+          "name": "analysis_result",
+          "type": "object",
+          "mutability": "mutable",
+          "scope": "execution",
+          "capability": "memory_rw",
+          "default": null
+        },
+        {
+          "name": "report",
+          "type": "object",
+          "mutability": "mutable",
+          "scope": "execution",
+          "capability": "memory_rw",
+          "default": null
+        }
+      ]
+    },
+    "nodes": [
+      {
+        "id": "node-001",
+        "type": "transformation",
+        "effects": ["READ", "WRITE"],
+        "capabilities": ["memory_rw"],
+        "inputs": [{"binding": "input_doc", "access": "read"}],
+        "outputs": [{"binding": "analysis_result", "access": "write"}],
+        "payload": { "operation": "parse_document", "format": "markdown" }
+      },
+      {
+        "id": "node-002",
+        "type": "tool_call",
+        "effects": ["READ", "WRITE", "CALL_TOOL"],
+        "capabilities": ["tool_execution", "memory_rw"],
+        "inputs": [{"binding": "analysis_result", "access": "read"}],
+        "outputs": [{"binding": "analysis_result", "access": "write"}],
+        "payload": { "tool": "classify_clause", "params": { "taxonomy": "liability" } }
+      },
+      {
+        "id": "node-003",
+        "type": "mutation",
+        "effects": ["READ", "WRITE"],
+        "capabilities": ["memory_rw"],
+        "inputs": [{"binding": "analysis_result", "access": "read"}],
+        "outputs": [{"binding": "report", "access": "write"}],
+        "payload": { "format": "legal_memo" }
+      }
+    ],
+    "edges": [
+      {"source": "node-001", "target": "node-002"},
+      {"source": "node-002", "target": "node-003"}
+    ]
+  },
+  "checksum": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

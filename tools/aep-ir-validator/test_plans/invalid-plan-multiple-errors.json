@@ -1,0 +1,89 @@
+{
+  "plan": {
+    "plan_header": {
+      "ir_version": "1.0.0",
+      "plan_id": "plan-invalid-test-001",
+      "declared_capabilities": [],
+      "declared_bindings": [
+        {
+          "name": "input_doc",
+          "type": "object",
+          "mutability": "readonly",
+          "scope": "session",
+          "capability": "memory_rw",
+          "default": null
+        },
+        {
+          "name": "result",
+          "type": "object",
+          "mutability": "readonly",
+          "scope": "execution",
+          "capability": "memory_rw",
+          "default": null
+        }
+      ]
+    },
+    "nodes": [
+      {
+        "id": "node-001",
+        "type": "transformation",
+        "effects": ["CALL_TOOL"],
+        "capabilities": ["memory_rw"],
+        "inputs": [{"binding": "input_doc", "access": "read"}],
+        "outputs": [{"binding": "result", "access": "write"}],
+        "payload": { "operation": "parse" }
+      },
+      {
+        "id": "node-002",
+        "type": "tool_call",
+        "effects": ["READ"],
+        "capabilities": ["tool_execution"],
+        "inputs": [{"binding": "result", "access": "read"}],
+        "outputs": [{"binding": "result", "access": "write"}],
+        "payload": { "tool": "external_api" }
+      },
+      {
+        "id": "node-003",
+        "type": "mutation",
+        "effects": ["READ"],
+        "capabilities": ["memory_rw"],
+        "inputs": [{"binding": "nonexistent_binding", "access": "read"}],
+        "outputs": [{"binding": "result", "access": "write"}],
+        "payload": { "format": "report" }
+      },
+      {
+        "id": "node-001",
+        "type": "sync",
+        "effects": ["READ"],
+        "capabilities": [],
+        "inputs": [],
+        "outputs": []
+      },
+      {
+        "id": "node-005",
+        "type": "sync",
+        "effects": [],
+        "capabilities": [],
+        "inputs": [{"binding": "result", "access": "write"}],
+        "outputs": [{"binding": "result", "access": "write"}],
+        "payload": {}
+      },
+      {
+        "id": "node-006",
+        "type": "mutation",
+        "effects": ["WRITE"],
+        "capabilities": ["memory_rw"],
+        "inputs": [],
+        "outputs": [{"binding": "result", "access": "write"}],
+        "payload": {}
+      }
+    ],
+    "edges": [
+      {"source": "node-001", "target": "node-002"},
+      {"source": "node-002", "target": "node-003"},
+      {"source": "node-003", "target": "node-005"},
+      {"source": "node-005", "target": "node-001"}
+    ]
+  },
+  "checksum": "sha256-placeholder"
+}

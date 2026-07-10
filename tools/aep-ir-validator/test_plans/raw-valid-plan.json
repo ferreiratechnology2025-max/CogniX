@@ -1,0 +1,35 @@
+{
+  "plan_header": {
+    "ir_version": "1.0.0",
+    "plan_id": "test-raw-001",
+    "declared_capabilities": ["memory_rw", "tool_execution"],
+    "declared_bindings": [
+      {
+        "name": "input_doc",
+        "type": "object",
+        "mutability": "readonly",
+        "scope": "session",
+        "capability": "memory_rw"
+      },
+      {
+        "name": "analysis_result",
+        "type": "object",
+        "mutability": "mutable",
+        "scope": "execution",
+        "capability": "memory_rw"
+      }
+    ]
+  },
+  "nodes": [
+    {
+      "id": "node-001",
+      "type": "tool_call",
+      "effects": ["CALL_TOOL", "READ", "WRITE"],
+      "capabilities": ["tool_execution", "memory_rw"],
+      "inputs": [{"binding": "input_doc", "access": "read"}],
+      "outputs": [{"binding": "analysis_result", "access": "write"}],
+      "payload": {"tool": "classify_document", "params": {"taxonomy": "legal"}}
+    }
+  ],
+  "edges": []
+}

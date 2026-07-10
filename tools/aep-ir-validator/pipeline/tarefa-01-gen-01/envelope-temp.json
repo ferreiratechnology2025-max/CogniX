@@ -1,0 +1,52 @@
+{
+  "plan": {
+    "edges": [],
+    "nodes": [
+      {
+        "capabilities": [
+          "memory_rw"
+        ],
+        "effects": [
+          "WRITE"
+        ],
+        "id": "node-001",
+        "inputs": [
+          {
+            "access": "read",
+            "binding": "data"
+          }
+        ],
+        "outputs": [
+          {
+            "access": "write",
+            "binding": "data"
+          }
+        ],
+        "payload": {
+          "operation": "update",
+          "value": "processed"
+        },
+        "type": "mutation"
+      }
+    ],
+    "plan_header": {
+      "declared_bindings": [
+        {
+          "capability": "memory_rw",
+          "default": "test",
+          "mutability": "mutable",
+          "name": "data",
+          "scope": "execution",
+          "type": "string"
+        }
+      ],
+      "declared_capabilities": [
+        "memory_rw",
+        "tool_execution"
+      ],
+      "ir_version": "1.0.0",
+      "plan_id": "test-001"
+    }
+  },
+  "checksum": "b169807a2d6ea03fdd3c28fcfacedf0efcad4d4e0cf7e4808b6d720fa0d526b3"
+}
