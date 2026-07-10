@@ -1,0 +1,5 @@
+# AEP-IR validator/runner dependencies.
+# Canonicalization is a hard dependency: the frozen Canonicalization Standard
+# (SPEC/AEP-IR-1.0.md) names RFC 8785 (JCS). rfc8785 implements it; the older
+# canonicaljson library is NOT RFC 8785 (it differs on number serialization).
+rfc8785==0.1.4

@@ -35,7 +35,9 @@ Each task includes:
 
 ### Requirements
 - Python 3.8+
-- `canonicaljson>=2.0.0` (install via `pip install canonicaljson`)
+- `rfc8785==0.1.4` — RFC 8785 (JCS) canonicalization, the standard named by the
+  spec (install via `pip install -r requirements.txt`). Note: the older
+  `canonicaljson` library is NOT RFC 8785 and must not be substituted.
 - An LLM API key (optional — interactive mode works without one)
 
 ### Interactive Mode (recommended for first run)
