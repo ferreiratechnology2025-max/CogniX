@@ -66,18 +66,34 @@ The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "S
 - depends MUST exist
 - status MUST be valid
 
-### 3.4 EXEC
-**Purpose:** Execute current task.
+### 3.4 EXEC — Execution Boundary
+**Purpose:** Mark the point where task execution occurs.
+
+The EXEC opcode marks the point where task execution occurs. The semantics of
+the task itself are OUT OF SCOPE for this protocol.
+
+**Normative clauses:**
+- The kernel MUST NOT interpret, evaluate, or execute the contents of
+  R2 [NEXT_ACT]. R2 is opaque to the kernel.
+- The kernel MUST decrement R1 [WATCHDOG] exactly once per EXEC cycle and
+  MUST refuse the cycle if R1 == 0.
+- The executing agent is the sole execution environment. Task consequences
+  re-enter the protocol ONLY through R3 [MODIFIED] and are subject to
+  VALIDATE/COMMIT.
+- Implementations MUST NOT add execution semantics to EXEC (e.g., eval, shell
+  dispatch, subprocess). An implementation that executes R2 contents is
+  NON-CONFORMANT.
 
 **Behavior:**
-1. Read R2 [NEXT_ACT]
-2. Execute task
-3. Update R1 [LAST_ACT]
+1. Read R2 [NEXT_ACT] as an opaque value
+2. Decrement R1 [WATCHDOG]; refuse the cycle if R1 == 0
+3. Update R1 [LAST_ACT] and R7 [TIMESTAMP]
 
 **Contracts:**
-- Input: R2 [NEXT_ACT]
-- Output: Task executed
-- Side effects: May modify files
+- Input: R2 [NEXT_ACT] (opaque)
+- Output: EXEC cycle acknowledged; R2 returned unchanged
+- Side effects: Register update only; the kernel writes no files as a result
+  of R2's contents
 
 ### 3.5 COMMIT
 **Purpose:** Persist changes.

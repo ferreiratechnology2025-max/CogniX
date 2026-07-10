@@ -108,3 +108,32 @@ New Resource types MAY be added without changing the protocol.
 - 1.0.0: Active (stable)
 - 1.x.x: Active (compatible)
 - 2.0.0: Active (breaking change)
+
+## 9. Security Considerations
+
+AEP is an execution *envelope*: it governs state, cycles, transactions, and
+error recovery, but it does not execute task payloads. The kernel's attack
+surface is therefore limited to three operations:
+
+1. **Opcode parsing.** The kernel parses a fixed, closed set of opcodes
+   (BOOT, LOAD, VALIDATE, EXEC, COMMIT, EXIT, YIELD). Unknown opcodes MUST
+   fail without side effects. Opcode arguments are the only agent-controlled
+   input the kernel acts upon.
+
+2. **Resource ID resolution.** `LOAD`/`VALIDATE` resolve a `resource_id` to a
+   file path. Implementations MUST reject any `resource_id` that is not a
+   plain identifier (kebab-case; no path separators, no `..`) before touching
+   the filesystem, so that resolution cannot escape the resource directory.
+
+3. **State writing.** The kernel persists registers R0–R7 to a fixed state
+   location. Register *values* are opaque data; they are written and read
+   back verbatim and MUST NOT be interpreted as instructions.
+
+Payload execution is explicitly excluded from this surface by the Execution
+Boundary (AEP-0003 section 3.4): R2 [NEXT_ACT] is opaque, and an implementation
+that interprets, evaluates, or executes R2 contents is NON-CONFORMANT.
+Consequently, threats such as arbitrary code execution, shell injection, and
+sandbox escape are out of scope for the kernel — they belong to the agent's
+own execution environment, not to the protocol. Process crashes and durability
+are likewise out of scope; recovery of committed history is delegated to the
+underlying version control system.
