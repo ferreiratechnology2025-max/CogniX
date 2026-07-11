@@ -1,0 +1,148 @@
+{
+  "plan_header": {
+    "ir_version": "1.0.0",
+    "plan_id": "plan-monitor-data-privacy-legislation-001",
+    "declared_capabilities": ["tool_execution", "memory_rw"],
+    "declared_bindings": [
+      {
+        "name": "legislation_db",
+        "type": "object",
+        "mutability": "readonly",
+        "scope": "session",
+        "capability": "tool_execution"
+      },
+      {
+        "name": "compliance_framework",
+        "type": "object",
+        "mutability": "readonly",
+        "scope": "persistent",
+        "capability": "memory_rw"
+      },
+      {
+        "name": "flags_register",
+        "type": "array",
+        "mutability": "mutable",
+        "scope": "session",
+        "capability": "memory_rw",
+        "default": []
+      },
+      {
+        "name": "report_draft",
+        "type": "object",
+        "mutability": "mutable",
+        "scope": "execution",
+        "capability": "memory_rw",
+        "default": {}
+      },
+      {
+        "name": "search_results",
+        "type": "array",
+        "mutability": "mutable",
+        "scope": "execution",
+        "capability": "memory_rw",
+        "default": []
+      },
+      {
+        "name": "proposal_text",
+        "type": "string",
+        "mutability": "mutable",
+        "scope": "execution",
+        "capability": "memory_rw",
+        "default": ""
+      },
+      {
+        "name": "conflict_analysis",
+        "type": "object",
+        "mutability": "mutable",
+        "scope": "execution",
+        "capability": "memory_rw",
+        "default": {}
+      }
+    ]
+  },
+  "nodes": [
+    {
+      "id": "node-001",
+      "type": "tool_call",
+      "effects": ["CALL_TOOL", "READ", "WRITE"],
+      "capabilities": ["tool_execution", "memory_rw"],
+      "inputs": [{"binding": "legislation_db", "access": "read"}],
+      "outputs": [{"binding": "search_results", "access": "write"}],
+      "payload": {
+        "tool": "search_legislative_db",
+        "params": {
+          "query": "privacidade de dados AND responsabilizacao algoritmica",
+          "date_from": "2024-01-01"
+        }
+      }
+    },
+    {
+      "id": "node-002",
+      "type": "tool_call",
+      "effects": ["CALL_TOOL", "READ", "WRITE"],
+      "capabilities": ["tool_execution", "memory_rw"],
+      "inputs": [{"binding": "search_results", "access": "read"}],
+      "outputs": [{"binding": "proposal_text", "access": "write"}],
+      "payload": {
+        "tool": "read_document",
+        "params": {"uri": "{{search_results[*].uri}}"}
+      }
+    },
+    {
+      "id": "node-003",
+      "type": "tool_call",
+      "effects": ["CALL_TOOL", "READ", "WRITE"],
+      "capabilities": ["tool_execution", "memory_rw"],
+      "inputs": [
+        {"binding": "proposal_text", "access": "read"},
+        {"binding": "compliance_framework", "access": "read"}
+      ],
+      "outputs": [{"binding": "conflict_analysis", "access": "write"}],
+      "payload": {
+        "tool": "cross_reference",
+        "params": {
+          "text": "{{proposal_text}}",
+          "framework": "{{compliance_framework}}"
+        }
+      }
+    },
+    {
+      "id": "node-004",
+      "type": "tool_call",
+      "effects": ["CALL_TOOL", "READ", "WRITE"],
+      "capabilities": ["tool_execution", "memory_rw"],
+      "inputs": [{"binding": "conflict_analysis", "access": "read"}],
+      "outputs": [{"binding": "flags_register", "access": "write"}],
+      "payload": {
+        "tool": "flag_conflict",
+        "params": {
+          "article_id": "{{conflict_analysis.article_id}}",
+          "policy_id": "{{conflict_analysis.policy_id}}",
+          "reason": "{{conflict_analysis.reason}}"
+        }
+      }
+    },
+    {
+      "id": "node-005",
+      "type": "mutation",
+      "effects": ["READ", "WRITE"],
+      "capabilities": ["memory_rw"],
+      "inputs": [
+        {"binding": "flags_register", "access": "read"},
+        {"binding": "conflict_analysis", "access": "read"}
+      ],
+      "outputs": [{"binding": "report_draft", "access": "write"}],
+      "payload": {
+        "operation": "compile_monitoring_report",
+        "sections": ["summary", "flagged_conflicts", "recommendations"]
+      }
+    }
+  ],
+  "edges": [
+    {"source": "node-001", "target": "node-002"},
+    {"source": "node-002", "target": "node-003"},
+    {"source": "node-003", "target": "node-004"},
+    {"source": "node-004", "target": "node-005"},
+    {"source": "node-003", "target": "node-005"}
+  ]
+}

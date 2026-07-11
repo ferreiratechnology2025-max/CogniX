@@ -1,0 +1,127 @@
+{
+  "plan_header": {
+    "ir_version": "1.0.0",
+    "plan_id": "plan-track-compliance-deadlines-001",
+    "declared_capabilities": ["memory_rw", "tool_execution"],
+    "declared_bindings": [
+      {
+        "name": "portfolio_db",
+        "type": "object",
+        "mutability": "readonly",
+        "scope": "persistent",
+        "capability": "memory_rw",
+        "default": null
+      },
+      {
+        "name": "deadlines",
+        "type": "array",
+        "mutability": "mutable",
+        "scope": "session",
+        "capability": "memory_rw",
+        "default": null
+      },
+      {
+        "name": "escalations",
+        "type": "array",
+        "mutability": "mutable",
+        "scope": "session",
+        "capability": "memory_rw",
+        "default": null
+      },
+      {
+        "name": "notification_queue",
+        "type": "array",
+        "mutability": "mutable",
+        "scope": "execution",
+        "capability": "memory_rw",
+        "default": []
+      }
+    ]
+  },
+  "nodes": [
+    {
+      "id": "node-001",
+      "type": "tool_call",
+      "effects": ["CALL_TOOL", "READ", "WRITE"],
+      "capabilities": ["tool_execution", "memory_rw"],
+      "inputs": [{"binding": "portfolio_db", "access": "read"}],
+      "outputs": [{"binding": "deadlines", "access": "write"}],
+      "payload": {"tool": "query_deadline_db", "params": {"portfolio_id": "portfolio_db.id"}}
+    },
+    {
+      "id": "node-002",
+      "type": "tool_call",
+      "effects": ["CALL_TOOL", "READ", "WRITE"],
+      "capabilities": ["tool_execution", "memory_rw"],
+      "inputs": [
+        {"binding": "deadlines", "access": "read"},
+        {"binding": "portfolio_db", "access": "read"}
+      ],
+      "outputs": [{"binding": "deadlines", "access": "write"}],
+      "payload": {
+        "tool": "check_compliance_status",
+        "params": {"company_id": "each.company_id", "regulation_id": "each.regulation_id"},
+        "iterate": "deadlines"
+      }
+    },
+    {
+      "id": "node-003",
+      "type": "tool_call",
+      "effects": ["CALL_TOOL", "READ", "WRITE"],
+      "capabilities": ["tool_execution", "memory_rw"],
+      "inputs": [{"binding": "deadlines", "access": "read"}],
+      "outputs": [{"binding": "deadlines", "access": "write"}],
+      "payload": {
+        "tool": "calculate_lead_time",
+        "params": {"deadline_date": "each.deadline_date", "current_date": "now"},
+        "iterate": "deadlines"
+      }
+    },
+    {
+      "id": "node-004",
+      "type": "transformation",
+      "effects": ["READ", "WRITE"],
+      "capabilities": ["memory_rw"],
+      "inputs": [{"binding": "deadlines", "access": "read"}],
+      "outputs": [{"binding": "escalations", "access": "write"}],
+      "payload": {
+        "operation": "filter_escalation_candidates",
+        "criteria": {"lead_time_days_lte": 30, "preparation_progress_lt": 0.5},
+        "description": "Select deadlines within 30 days with <50% preparation progress for escalation."
+      }
+    },
+    {
+      "id": "node-005",
+      "type": "tool_call",
+      "effects": ["CALL_TOOL", "READ", "WRITE"],
+      "capabilities": ["tool_execution", "memory_rw"],
+      "inputs": [{"binding": "escalations", "access": "read"}],
+      "outputs": [{"binding": "escalations", "access": "write"}],
+      "payload": {
+        "tool": "escalate",
+        "params": {"deadline_id": "each.deadline_id", "reason": "each.reason", "priority": "high"},
+        "iterate": "escalations"
+      }
+    },
+    {
+      "id": "node-006",
+      "type": "tool_call",
+      "effects": ["CALL_TOOL", "READ", "WRITE"],
+      "capabilities": ["tool_execution", "memory_rw"],
+      "inputs": [{"binding": "escalations", "access": "read"}],
+      "outputs": [{"binding": "notification_queue", "access": "write"}],
+      "payload": {
+        "tool": "send_notification",
+        "params": {"recipient": "each.owner", "message": "each.escalation_message"},
+        "iterate": "escalations"
+      }
+    }
+  ],
+  "edges": [
+    {"source": "node-001", "target": "node-002"},
+    {"source": "node-002", "target": "node-003"},
+    {"source": "node-003", "target": "node-004"},
+    {"source": "node-004", "target": "node-005"},
+    {"source": "node-005", "target": "node-006"}
+  ]
+}

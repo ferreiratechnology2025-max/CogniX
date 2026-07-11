@@ -1,0 +1,124 @@
+{
+  "plan_header": {
+    "ir_version": "1.0.0",
+    "plan_id": "plan-audit-policy-mlsc-001",
+    "declared_capabilities": ["memory_rw", "tool_execution"],
+    "declared_bindings": [
+      {
+        "name": "policy_document",
+        "type": "object",
+        "mutability": "readonly",
+        "scope": "session",
+        "capability": "memory_rw"
+      },
+      {
+        "name": "regulation_text",
+        "type": "object",
+        "mutability": "readonly",
+        "scope": "session",
+        "capability": "memory_rw"
+      },
+      {
+        "name": "policy_content",
+        "type": "object",
+        "mutability": "mutable",
+        "scope": "execution",
+        "capability": "memory_rw",
+        "default": {}
+      },
+      {
+        "name": "regulation_content",
+        "type": "object",
+        "mutability": "mutable",
+        "scope": "execution",
+        "capability": "memory_rw",
+        "default": {}
+      },
+      {
+        "name": "gap_analysis",
+        "type": "object",
+        "mutability": "mutable",
+        "scope": "execution",
+        "capability": "memory_rw",
+        "default": {}
+      },
+      {
+        "name": "action_plan",
+        "type": "object",
+        "mutability": "mutable",
+        "scope": "execution",
+        "capability": "memory_rw",
+        "default": {}
+      }
+    ]
+  },
+  "nodes": [
+    {
+      "id": "node-001",
+      "type": "tool_call",
+      "effects": ["CALL_TOOL", "READ", "WRITE"],
+      "capabilities": ["tool_execution", "memory_rw"],
+      "inputs": [{"binding": "policy_document", "access": "read"}],
+      "outputs": [{"binding": "policy_content", "access": "write"}],
+      "payload": {"tool": "read_policy", "params": {"uri": "internal://policies/data_retention"}}
+    },
+    {
+      "id": "node-002",
+      "type": "tool_call",
+      "effects": ["CALL_TOOL", "READ", "WRITE"],
+      "capabilities": ["tool_execution", "memory_rw"],
+      "inputs": [{"binding": "regulation_text", "access": "read"}],
+      "outputs": [{"binding": "regulation_content", "access": "write"}],
+      "payload": {"tool": "read_regulation", "params": {"uri": "regulation://br/mlsc/latest"}}
+    },
+    {
+      "id": "node-003",
+      "type": "tool_call",
+      "effects": ["CALL_TOOL", "READ", "WRITE"],
+      "capabilities": ["tool_execution", "memory_rw"],
+      "inputs": [
+        {"binding": "policy_content", "access": "read"},
+        {"binding": "regulation_content", "access": "read"}
+      ],
+      "outputs": [{"binding": "gap_analysis", "access": "write"}],
+      "payload": {
+        "tool": "compare_documents",
+        "params": {
+          "policy_text": "$policy_content",
+          "regulation_text": "$regulation_content",
+          "scope": "data_retention"
+        }
+      }
+    },
+    {
+      "id": "node-004",
+      "type": "tool_call",
+      "effects": ["CALL_TOOL", "READ", "WRITE"],
+      "capabilities": ["tool_execution", "memory_rw"],
+      "inputs": [{"binding": "gap_analysis", "access": "read"}],
+      "outputs": [{"binding": "gap_analysis", "access": "write"}],
+      "payload": {"tool": "assess_gap_severity", "params": {"gap": "$gap_analysis"}}
+    },
+    {
+      "id": "node-005",
+      "type": "tool_call",
+      "effects": ["CALL_TOOL", "READ", "WRITE"],
+      "capabilities": ["tool_execution", "memory_rw"],
+      "inputs": [{"binding": "gap_analysis", "access": "read"}],
+      "outputs": [{"binding": "action_plan", "access": "write"}],
+      "payload": {
+        "tool": "generate_action_plan",
+        "params": {
+          "gaps": "$gap_analysis",
+          "recommendations": "auto"
+        }
+      }
+    }
+  ],
+  "edges": [
+    {"source": "node-001", "target": "node-003"},
+    {"source": "node-002", "target": "node-003"},
+    {"source": "node-003", "target": "node-004"},
+    {"source": "node-004", "target": "node-005"}
+  ]
+}

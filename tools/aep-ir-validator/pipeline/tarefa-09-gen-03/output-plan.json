@@ -1,0 +1,172 @@
+{
+  "plan_header": {
+    "ir_version": "1.0.0",
+    "plan_id": "plan-patent-litigation-risk-001",
+    "declared_capabilities": ["memory_rw", "tool_execution"],
+    "declared_bindings": [
+      {
+        "name": "patent_document",
+        "type": "object",
+        "mutability": "readonly",
+        "scope": "session",
+        "capability": "memory_rw"
+      },
+      {
+        "name": "product_db",
+        "type": "object",
+        "mutability": "readonly",
+        "scope": "persistent",
+        "capability": "memory_rw"
+      },
+      {
+        "name": "revenue_data",
+        "type": "object",
+        "mutability": "readonly",
+        "scope": "persistent",
+        "capability": "memory_rw"
+      },
+      {
+        "name": "legal_costs",
+        "type": "object",
+        "mutability": "readonly",
+        "scope": "session",
+        "capability": "memory_rw"
+      },
+      {
+        "name": "patent_text",
+        "type": "string",
+        "mutability": "mutable",
+        "scope": "execution",
+        "capability": "memory_rw",
+        "default": null
+      },
+      {
+        "name": "patent_claims",
+        "type": "object",
+        "mutability": "mutable",
+        "scope": "execution",
+        "capability": "memory_rw",
+        "default": {}
+      },
+      {
+        "name": "product_architecture",
+        "type": "object",
+        "mutability": "mutable",
+        "scope": "execution",
+        "capability": "memory_rw",
+        "default": {}
+      },
+      {
+        "name": "prior_art_results",
+        "type": "object",
+        "mutability": "mutable",
+        "scope": "session",
+        "capability": "memory_rw",
+        "default": {}
+      },
+      {
+        "name": "exposure_assessment",
+        "type": "object",
+        "mutability": "mutable",
+        "scope": "execution",
+        "capability": "memory_rw",
+        "default": {}
+      },
+      {
+        "name": "strategy_recommendation",
+        "type": "object",
+        "mutability": "mutable",
+        "scope": "execution",
+        "capability": "memory_rw",
+        "default": {}
+      }
+    ]
+  },
+  "nodes": [
+    {
+      "id": "node-001",
+      "type": "tool_call",
+      "effects": ["CALL_TOOL", "READ", "WRITE"],
+      "capabilities": ["tool_execution", "memory_rw"],
+      "inputs": [{"binding": "patent_document", "access": "read"}],
+      "outputs": [{"binding": "patent_text", "access": "write"}],
+      "payload": {"tool": "read_patent", "params": {"uri": "patent_document"}}
+    },
+    {
+      "id": "node-002",
+      "type": "tool_call",
+      "effects": ["CALL_TOOL", "READ", "WRITE"],
+      "capabilities": ["tool_execution", "memory_rw"],
+      "inputs": [{"binding": "patent_text", "access": "read"}],
+      "outputs": [{"binding": "patent_claims", "access": "write"}],
+      "payload": {"tool": "analyze_claims", "params": {"patent_text": "patent_text"}}
+    },
+    {
+      "id": "node-003",
+      "type": "tool_call",
+      "effects": ["CALL_TOOL", "READ", "WRITE"],
+      "capabilities": ["tool_execution", "memory_rw"],
+      "inputs": [{"binding": "product_db", "access": "read"}],
+      "outputs": [{"binding": "product_architecture", "access": "write"}],
+      "payload": {"tool": "map_product_architecture", "params": {"client_id": "client-001"}}
+    },
+    {
+      "id": "node-004",
+      "type": "tool_call",
+      "effects": ["CALL_TOOL", "READ", "WRITE"],
+      "capabilities": ["tool_execution", "memory_rw"],
+      "inputs": [
+        {"binding": "patent_claims", "access": "read"},
+        {"binding": "product_architecture", "access": "read"}
+      ],
+      "outputs": [{"binding": "prior_art_results", "access": "write"}],
+      "payload": {
+        "tool": "search_prior_art",
+        "params": {"claims": "patent_claims", "databases": ["uspto", "epo", "google_patents"]}
+      }
+    },
+    {
+      "id": "node-005",
+      "type": "tool_call",
+      "effects": ["CALL_TOOL", "READ", "WRITE"],
+      "capabilities": ["tool_execution", "memory_rw"],
+      "inputs": [
+        {"binding": "patent_claims", "access": "read"},
+        {"binding": "revenue_data", "access": "read"}
+      ],
+      "outputs": [{"binding": "exposure_assessment", "access": "write"}],
+      "payload": {
+        "tool": "estimate_exposure",
+        "params": {"claims": "patent_claims", "revenue_data": "revenue_data"}
+      }
+    },
+    {
+      "id": "node-006",
+      "type": "tool_call",
+      "effects": ["CALL_TOOL", "READ", "WRITE"],
+      "capabilities": ["tool_execution", "memory_rw"],
+      "inputs": [
+        {"binding": "prior_art_results", "access": "read"},
+        {"binding": "exposure_assessment", "access": "read"},
+        {"binding": "legal_costs", "access": "read"}
+      ],
+      "outputs": [{"binding": "strategy_recommendation", "access": "write"}],
+      "payload": {
+        "tool": "recommend_strategy",
+        "params": {
+          "validity": "prior_art_results",
+          "exposure": "exposure_assessment",
+          "costs": "legal_costs"
+        }
+      }
+    }
+  ],
+  "edges": [
+    {"source": "node-001", "target": "node-002"},
+    {"source": "node-002", "target": "node-004"},
+    {"source": "node-003", "target": "node-004"},
+    {"source": "node-002", "target": "node-005"},
+    {"source": "node-004", "target": "node-006"},
+    {"source": "node-005", "target": "node-006"}
+  ]
+}

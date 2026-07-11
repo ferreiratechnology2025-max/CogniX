@@ -1,0 +1,138 @@
+{
+  "plan_header": {
+    "ir_version": "1.0.0",
+    "plan_id": "plan-contract-liability-analysis-001",
+    "declared_capabilities": ["memory_rw", "tool_execution"],
+    "declared_bindings": [
+      {
+        "name": "contract_document",
+        "type": "string",
+        "mutability": "readonly",
+        "scope": "session",
+        "capability": "memory_rw"
+      },
+      {
+        "name": "risk_thresholds",
+        "type": "object",
+        "mutability": "readonly",
+        "scope": "persistent",
+        "capability": "memory_rw"
+      },
+      {
+        "name": "parsed_clauses",
+        "type": "array",
+        "mutability": "mutable",
+        "scope": "execution",
+        "capability": "memory_rw",
+        "default": []
+      },
+      {
+        "name": "classified_clauses",
+        "type": "array",
+        "mutability": "mutable",
+        "scope": "execution",
+        "capability": "memory_rw",
+        "default": []
+      },
+      {
+        "name": "analysis_results",
+        "type": "array",
+        "mutability": "mutable",
+        "scope": "execution",
+        "capability": "memory_rw",
+        "default": []
+      },
+      {
+        "name": "report_draft",
+        "type": "object",
+        "mutability": "mutable",
+        "scope": "execution",
+        "capability": "memory_rw",
+        "default": {}
+      }
+    ]
+  },
+  "nodes": [
+    {
+      "id": "node-001",
+      "type": "tool_call",
+      "effects": ["CALL_TOOL", "READ", "WRITE"],
+      "capabilities": ["tool_execution", "memory_rw"],
+      "inputs": [{"binding": "contract_document", "access": "read"}],
+      "outputs": [{"binding": "parsed_clauses", "access": "write"}],
+      "payload": {"tool": "parse_contract", "params": {"uri": "contract_document"}}
+    },
+    {
+      "id": "node-002",
+      "type": "tool_call",
+      "effects": ["CALL_TOOL", "READ", "WRITE"],
+      "capabilities": ["tool_execution", "memory_rw"],
+      "inputs": [{"binding": "parsed_clauses", "access": "read"}],
+      "outputs": [{"binding": "classified_clauses", "access": "write"}],
+      "payload": {"tool": "classify_clause", "params": {"taxonomy": "legal_liability_taxonomy"}}
+    },
+    {
+      "id": "node-003",
+      "type": "tool_call",
+      "effects": ["CALL_TOOL", "READ", "WRITE"],
+      "capabilities": ["tool_execution", "memory_rw"],
+      "inputs": [
+        {"binding": "classified_clauses", "access": "read"},
+        {"binding": "risk_thresholds", "access": "read"}
+      ],
+      "outputs": [{"binding": "analysis_results", "access": "write"}],
+      "payload": {"tool": "assess_risk", "params": {"category": "liability_limitation", "threshold": "3x_contract_value"}}
+    },
+    {
+      "id": "node-004",
+      "type": "tool_call",
+      "effects": ["CALL_TOOL", "READ", "WRITE"],
+      "capabilities": ["tool_execution", "memory_rw"],
+      "inputs": [
+        {"binding": "classified_clauses", "access": "read"},
+        {"binding": "risk_thresholds", "access": "read"}
+      ],
+      "outputs": [{"binding": "analysis_results", "access": "write"}],
+      "payload": {"tool": "assess_risk", "params": {"category": "indemnification_gap"}}
+    },
+    {
+      "id": "node-005",
+      "type": "tool_call",
+      "effects": ["CALL_TOOL", "READ", "WRITE"],
+      "capabilities": ["tool_execution", "memory_rw"],
+      "inputs": [
+        {"binding": "classified_clauses", "access": "read"},
+        {"binding": "risk_thresholds", "access": "read"}
+      ],
+      "outputs": [{"binding": "analysis_results", "access": "write"}],
+      "payload": {"tool": "assess_risk", "params": {"category": "governing_law_jurisdictional_risk"}}
+    },
+    {
+      "id": "node-006",
+      "type": "sync",
+      "effects": [],
+      "capabilities": [],
+      "inputs": [{"binding": "analysis_results", "access": "read"}],
+      "outputs": []
+    },
+    {
+      "id": "node-007",
+      "type": "tool_call",
+      "effects": ["CALL_TOOL", "READ", "WRITE"],
+      "capabilities": ["tool_execution", "memory_rw"],
+      "inputs": [{"binding": "analysis_results", "access": "read"}],
+      "outputs": [{"binding": "report_draft", "access": "write"}],
+      "payload": {"tool": "generate_report", "params": {"format": "structured_risk_report"}}
+    }
+  ],
+  "edges": [
+    {"source": "node-001", "target": "node-002"},
+    {"source": "node-002", "target": "node-003"},
+    {"source": "node-002", "target": "node-004"},
+    {"source": "node-002", "target": "node-005"},
+    {"source": "node-003", "target": "node-006"},
+    {"source": "node-004", "target": "node-006"},
+    {"source": "node-005", "target": "node-006"},
+    {"source": "node-006", "target": "node-007"}
+  ]
+}

@@ -39,9 +39,17 @@ benchmark-results.json
 KERNEL/STATE.md
 conformance/normative/snapshots/actual/
 
-# Partial experiment output (currently 1 of 30 plans). Results are versioned
-# only when the full 30-plan experiment has actually been run and reviewed.
-# Exception: manifest.json (frozen instrument config + run provenance) IS
-# tracked — it is the provenance record, not a partial result.
+# The 30-plan experiment has run and been reviewed (2026-07). Track the
+# reviewed final results (manifest, report, results table, generation log);
+# ignore regenerable per-plan byproducts (envelope copies, validator stdout
+# captures) — those are derivable from tools/aep-ir-validator/pipeline/*
+# /output-plan.json, which is tracked as the real generated data.
 experiment-results/*
 !experiment-results/manifest.json
+!experiment-results/REPORT.md
+!experiment-results/results-table.csv
+!experiment-results/generation-log.jsonl
+
+# Regenerable envelope byproduct (canonical plan + checksum), derivable from
+# the tracked output-plan.json in the same pipeline folder.
+tools/aep-ir-validator/pipeline/*/envelope-temp.json

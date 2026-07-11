@@ -1,0 +1,143 @@
+{
+  "plan_header": {
+    "ir_version": "1.0.0",
+    "plan_id": "plan-track-compliance-deadlines-001",
+    "declared_capabilities": ["memory_rw", "tool_execution"],
+    "declared_bindings": [
+      {
+        "name": "portfolio_db",
+        "type": "object",
+        "mutability": "readonly",
+        "scope": "persistent",
+        "capability": "memory_rw"
+      },
+      {
+        "name": "deadlines",
+        "type": "array",
+        "mutability": "mutable",
+        "scope": "session",
+        "capability": "memory_rw",
+        "default": []
+      },
+      {
+        "name": "compliance_status",
+        "type": "object",
+        "mutability": "mutable",
+        "scope": "execution",
+        "capability": "memory_rw",
+        "default": {}
+      },
+      {
+        "name": "lead_times",
+        "type": "object",
+        "mutability": "mutable",
+        "scope": "execution",
+        "capability": "memory_rw",
+        "default": {}
+      },
+      {
+        "name": "escalations",
+        "type": "array",
+        "mutability": "mutable",
+        "scope": "session",
+        "capability": "memory_rw",
+        "default": []
+      },
+      {
+        "name": "notification_queue",
+        "type": "array",
+        "mutability": "mutable",
+        "scope": "execution",
+        "capability": "memory_rw",
+        "default": []
+      }
+    ]
+  },
+  "nodes": [
+    {
+      "id": "node-001",
+      "type": "tool_call",
+      "effects": ["CALL_TOOL", "READ", "WRITE"],
+      "capabilities": ["tool_execution", "memory_rw"],
+      "inputs": [{"binding": "portfolio_db", "access": "read"}],
+      "outputs": [{"binding": "deadlines", "access": "write"}],
+      "payload": {"tool": "query_deadline_db", "params": {"portfolio_id": "portfolio-5-clients"}}
+    },
+    {
+      "id": "node-002",
+      "type": "tool_call",
+      "effects": ["CALL_TOOL", "READ", "WRITE"],
+      "capabilities": ["tool_execution", "memory_rw"],
+      "inputs": [
+        {"binding": "deadlines", "access": "read"},
+        {"binding": "portfolio_db", "access": "read"}
+      ],
+      "outputs": [{"binding": "compliance_status", "access": "write"}],
+      "payload": {
+        "tool": "check_compliance_status",
+        "params": {"iterate_over": "deadlines", "company_field": "company_id", "regulation_field": "regulation_id"}
+      }
+    },
+    {
+      "id": "node-003",
+      "type": "tool_call",
+      "effects": ["CALL_TOOL", "READ", "WRITE"],
+      "capabilities": ["tool_execution", "memory_rw"],
+      "inputs": [{"binding": "deadlines", "access": "read"}],
+      "outputs": [{"binding": "lead_times", "access": "write"}],
+      "payload": {
+        "tool": "calculate_lead_time",
+        "params": {"iterate_over": "deadlines", "deadline_field": "deadline_date", "current_date": "${now}"}
+      }
+    },
+    {
+      "id": "node-004",
+      "type": "transformation",
+      "effects": ["READ", "WRITE"],
+      "capabilities": ["memory_rw"],
+      "inputs": [
+        {"binding": "deadlines", "access": "read"},
+        {"binding": "compliance_status", "access": "read"},
+        {"binding": "lead_times", "access": "read"}
+      ],
+      "outputs": [{"binding": "escalations", "access": "write"}],
+      "payload": {
+        "operation": "filter_and_build_escalations",
+        "criteria": {"lead_time_days_lte": 30, "preparation_progress_lt": 0.5},
+        "escalation_fields": {"reason": "deadline within 30 days with <50% preparation progress", "priority": "high"}
+      }
+    },
+    {
+      "id": "node-005",
+      "type": "tool_call",
+      "effects": ["CALL_TOOL", "READ", "WRITE"],
+      "capabilities": ["tool_execution", "memory_rw"],
+      "inputs": [{"binding": "escalations", "access": "read"}],
+      "outputs": [{"binding": "escalations", "access": "write"}],
+      "payload": {
+        "tool": "escalate",
+        "params": {"iterate_over": "escalations", "deadline_field": "deadline_id", "reason_field": "reason", "priority_field": "priority"}
+      }
+    },
+    {
+      "id": "node-006",
+      "type": "tool_call",
+      "effects": ["CALL_TOOL", "READ", "WRITE", "EMIT_EVENT"],
+      "capabilities": ["tool_execution", "memory_rw"],
+      "inputs": [{"binding": "escalations", "access": "read"}],
+      "outputs": [{"binding": "notification_queue", "access": "write"}],
+      "payload": {
+        "tool": "send_notification",
+        "params": {"iterate_over": "escalations", "recipient": "compliance_team", "message_template": "Escalation: ${reason} (deadline ${deadline_id}, priority ${priority})"}
+      }
+    }
+  ],
+  "edges": [
+    {"source": "node-001", "target": "node-002"},
+    {"source": "node-001", "target": "node-003"},
+    {"source": "node-002", "target": "node-004"},
+    {"source": "node-003", "target": "node-004"},
+    {"source": "node-004", "target": "node-005"},
+    {"source": "node-005", "target": "node-006"}
+  ]
+}

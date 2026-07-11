@@ -1,6 +1,7 @@
 {
   "experiment": "AEP IR LLM Generability (30 plans)",
-  "status": "calibrated (GATE 0) — generation pending",
+  "status": "complete — 30/30 generated, 29/30 valid (96.7%), gate (>=70%) PASSED; see experiment-results/REPORT.md",
+  "generation_note": "30 calls across two transient API keys (neither persisted in any committed file — verified by grep before every commit). The first key's validity window elapsed after 26/30 calls, surfacing as a final 401 authentication_error (a structured 4xx outcome, correctly not retried per transport_retry_policy — not a transport failure). The remaining 4 slots (tarefa-09-gen-03, tarefa-10-gen-01/02/03) were generated with a second key. Both keys were used transiently and the operator was advised to revoke them after use.",
   "provenance": {
     "spec_baseline": "990acf4",
     "spec_baseline_note": "Public commit of the frozen SPEC/AEP-IR-1.0.md; the report's baseline of record.",
