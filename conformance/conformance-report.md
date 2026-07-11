@@ -1,46 +1,66 @@
 # AEP Conformance Report
 
-**Runtimes:** python (AEP Kernel v1.0.0), sqlite
-**Regenerated:** post-UTF-8 hotfix (commit that forces UTF-8 stdout/stderr)
+**Date:** 2026-07-11
+**Runtime:** sqlite
+**KMC Oracle:** Enabled
 
-> **Canonical evidence.** The per-run JSON snapshots under
-> `conformance/normative/snapshots/actual/` are gitignored because they embed
-> non-deterministic session-ids/timestamps. This report is the versioned,
-> human-reviewed summary of the last run.
-
-## What the numbers mean (read literally)
-
-The normative runner (`conformance/normative/test_runner.py`) runs a single
-default program end-to-end against each runtime and asserts only `status` and
-`exit_code`. It does **not** yet execute each case's per-case `procedure` — that
-enforcement is pending (see backlog: discriminating runner). Treat the result
-below as a **pipeline smoke test**, not as 10 independent scenarios.
-
-Distinct kernel behavior — including the Execution Boundary (R2 opacity) — is
-enforced by the **behavioral pytest suite** (`implementations/python/tests/`),
-which is the strongest conformance evidence in the repo.
-
-## Normative suite (pipeline smoke)
+## Summary
 
 | Metric | Value |
 |--------|-------|
-| Test cases | 11 |
-| Runtimes | 2 (python, sqlite) |
-| Executions | 22 |
-| Passed | 22 |
+| Total Tests | 14 |
+| Passed | 14 |
 | Failed | 0 |
+| Pass Rate | 100.0% |
 
-Prior to the UTF-8 hotfix this suite reported 0/20 on legacy code pages
-(cp1252) because the CLI crashed while printing opcode logs; the snapshots
-previously committed under `snapshots/actual/` captured that failing state.
+## Test Results
 
-## Behavioral suite (pytest — real conformance)
+| Test ID | Name | Status | KMC |
+|---------|------|--------|-----|
+| TC-001-boot | Boot Opcode - System Initialization | PASS | [PASS] |
+| TC-002-load | Load Opcode - Resource Loading | PASS | [PASS] |
+| TC-003-validate | Validate Opcode - Resource Structure | PASS | [PASS] |
+| TC-004-exec | Exec Opcode - Task Execution | PASS | [PASS] |
+| TC-005-commit | Commit Opcode - State Persistence | PASS | [PASS] |
+| TC-006-exit | Exit Opcode - Session End | PASS | [PASS] |
+| TC-007-complete-flow | Complete Flow - Full Program | PASS | [PASS] |
+| TC-008-dependencies | Dependencies - Recursive Loading | PASS | [PASS] |
+| TC-009-error-handling | Error Handling - Consistent Error Format | PASS | [PASS] |
+| TC-010-exec-opacity | Exec Opcode - Kernel Must Not Interpret R2 | PASS | [PASS] |
+| TC-011-yield-r1-only | Yield Opcode - Modifies Only R1 | PASS | [PASS] |
+| TC-WD-001 | Watchdog Exhaustion Isolation | PASS | [PASS] |
+| TC-WD-002 | Preventive YIELD Avoids Exhaustion | PASS | [PASS] |
+| TC-WD-003 | Watchdog Exhaustion Rollback State Preservation | PASS | [PASS] |
+| TC-001-boot | Boot Opcode - System Initialization | PASS | [PASS] |
+| TC-002-load | Load Opcode - Resource Loading | PASS | [PASS] |
+| TC-003-validate | Validate Opcode - Resource Structure | PASS | [PASS] |
+| TC-004-exec | Exec Opcode - Task Execution | PASS | [PASS] |
+| TC-005-commit | Commit Opcode - State Persistence | PASS | [PASS] |
+| TC-006-exit | Exit Opcode - Session End | PASS | [PASS] |
+| TC-007-complete-flow | Complete Flow - Full Program | PASS | [PASS] |
+| TC-008-dependencies | Dependencies - Recursive Loading | PASS | [PASS] |
+| TC-009-error-handling | Error Handling - Consistent Error Format | PASS | [PASS] |
+| TC-010-exec-opacity | Exec Opcode - Kernel Must Not Interpret R2 | PASS | [PASS] |
+| TC-011-yield-r1-only | Yield Opcode - Modifies Only R1 | PASS | [PASS] |
+| TC-WD-001 | Watchdog Exhaustion Isolation | PASS | [PASS] |
+| TC-WD-002 | Preventive YIELD Avoids Exhaustion | PASS | [PASS] |
+| TC-WD-003 | Watchdog Exhaustion Rollback State Preservation | PASS | [PASS] |
 
-| Metric | Value |
-|--------|-------|
-| Tests | 13 |
-| Passed | 13 |
-| Failed | 0 |
+## KMC Behavioral Oracle Details
 
-Includes `test_exec_does_not_interpret_r2`, verified to fail against a mutated
-kernel that executes R2 (mutation-tested invariant).
+| Test ID | Valid | Failure | Assertions Passed | Assertions Failed |
+|---------|-------|---------|-------------------|-------------------|
+| TC-001-boot | [PASS] | - | 1 | 0 |
+| TC-002-load | [PASS] | - | 7 | 0 |
+| TC-003-validate | [PASS] | - | 7 | 0 |
+| TC-004-exec | [PASS] | - | 3 | 0 |
+| TC-005-commit | [PASS] | - | 5 | 0 |
+| TC-006-exit | [PASS] | - | 3 | 0 |
+| TC-007-complete-flow | [PASS] | - | 7 | 0 |
+| TC-008-dependencies | [PASS] | - | 7 | 0 |
+| TC-009-error-handling | [PASS] | - | 7 | 0 |
+| TC-010-exec-opacity | [PASS] | - | 3 | 0 |
+| TC-011-yield-r1-only | [PASS] | - | 3 | 0 |
+| TC-WD-001 | [PASS] | - | 6 | 0 |
+| TC-WD-002 | [PASS] | - | 5 | 0 |
+| TC-WD-003 | [PASS] | - | 6 | 0 |

@@ -6,9 +6,10 @@
 
 [![Status: Stable](https://img.shields.io/badge/status-stable-brightgreen)]()
 [![Version: 1.1.0](https://img.shields.io/badge/version-1.1.0-blue)]()
-[![Behavioral tests: 13/13](https://img.shields.io/badge/pytest-13%2F13-brightgreen)]()
-[![Normative: smoke 22/22](https://img.shields.io/badge/normative-smoke%2022%2F22-yellow)]()
-[![Implementations: 3](https://img.shields.io/badge/implementations-3-blue)]()
+[![Behavioral tests: 15/15](https://img.shields.io/badge/pytest-15%2F15-brightgreen)]()
+[![Normative: 28/28](https://img.shields.io/badge/normative-28%2F28-brightgreen)]()
+[![KMC Oracle: 14/14](https://img.shields.io/badge/kmc-14%2F14-brightgreen)]()
+[![Implementations: 2](https://img.shields.io/badge/implementations-2-blue)]()
 
 ---
 
@@ -51,6 +52,7 @@ The protocol is formally defined in [AEP/](AEP/) documents:
 | [AEP-0006](AEP/AEP-0006-simplified.md) | Simplified Execution Mode | Stable |
 | [AEP-0007](AEP/AEP-0007-profiles.md) | Compliance Profiles | Stable |
 | [AEP-0008](AEP/AEP-0008-fault-tolerance.md) | Fault Tolerance & Execution Guarantees | Active |
+| [GOVERNANCE](AEP/GOVERNANCE.md) | Promotion Criteria (Active → Stable) | Active |
 
 For the pure specification without implementation details, see [AEP/README.md](AEP/README.md).
 
@@ -60,19 +62,21 @@ For the pure specification without implementation details, see [AEP/README.md](A
 
 | Implementation | Status | Conformance | Notes |
 |----------------|--------|-------------|-------|
-| Reference (Markdown) | Stable | N/A — executable conformance not applicable (LLM-interpreted) | KOS v6.0 |
-| Python | Stable | pytest 13/13 behavioral; normative smoke 11 | Watchdog + validation rollback |
-| SQLite | Stable | normative smoke 11 (no behavioral suite yet) | Indexer & complex resource querying |
+| Reference (Markdown) | Stable | N/A — interpreted by LLM, not executable | KOS v6.0 |
+| Python | Stable | **15/15** behavioral (pytest); **14/14** normative; **14/14** KMC oracle | Full watchdog, YIELD, validation rollback |
+| SQLite | Stable | **14/14** normative (no behavioral suite yet) | Indexer & complex resource querying |
 
 ---
 
 ## Fault Tolerance (AEP-0008)
 
 AEP-0008 (Active) bounds the execution envelope around the agent. Its scope is
-**logical validation failures**, not process crashes:
+**logical validation failures** and **watchdog exhaustion**, not process crashes:
 
-- **Watchdog Timer (R1):** Bounds runaway loops. An agent issues a `YIELD`
-  instruction to request additional cycles when a task is valid but complex.
+- **Watchdog Timer (R1):** Decrements only on EXEC (AEP-0008 §1.1). An agent
+  issues a `YIELD` instruction *preventively* to request additional cycles.
+  Exhaustion at R1=0 triggers immediate halt with `AEP_ERR_WATCHDOG_EXHAUSTION`
+  and rollback preserving R0, R3, R7.
 - **Validation rollback:** COMMIT buffers changes and validates them. If a
   resource fails schema validation, the runtime discards the change, restores
   the last stable snapshot (`R3`), and writes a structured error into `R4`
@@ -83,36 +87,62 @@ crashes, write-ahead logging, and crash recovery are out of scope (see the
 Security Considerations in AEP-0001). Durability of history is delegated to the
 underlying version control system, not guaranteed by the kernel.
 
+See [AEP/GOVERNANCE.md](AEP/GOVERNANCE.md) for the Active → Stable promotion
+criteria (C1–C6) that govern AEP-0008's path to frozen status.
+
 ---
 
 ## Conformance
 
-Conformance is exercised at three levels, with different strengths. Read the
+Conformance is exercised at four levels, with increasing strength. Read the
 labels literally:
 
-- **Behavioral suite (pytest) — real conformance evidence.** `implementations/python/tests/`
-  exercises distinct kernel behavior, including the Execution Boundary
-  (`test_exec_does_not_interpret_r2`, verified to fail against a kernel that
-  executes R2). This is the strongest guarantee the repo currently offers.
-  ```bash
-  cd implementations/python && python -m pytest
-  ```
-- **Normative suite — pipeline smoke.** `conformance/normative/test_runner.py`
-  runs a default program end-to-end against the python and sqlite runtimes
-  (11 cases × 2 runtimes). It currently asserts only status + exit code and
-  runs the same default program for every case; each case's per-case
-  `procedure` is **documented but not yet enforced by the runner**. Treat
-  "22/22" as a pipeline smoke test, not 11 distinct scenarios.
-  ```bash
-  python conformance/normative/test_runner.py
-  ```
-- **Compliance Kit — structural validation only.** The
-  [Compliance Kit](compliance-kit/) validates that third-party *test
-  definitions* are well-formed. It does **not** yet execute implementations;
-  runtime conformance is verified by the normative runner and the pytest suite.
-  ```bash
-  python compliance-kit/runner/runner.py --implementation /path/to/runtime
-  ```
+### 1. KMC Behavioral Oracle — strongest guarantee
+
+The [Kernel Metamorphic Oracle](conformance/kmc/) (`conformance/kmc/`) is a
+**passive invariant checker** that validates execution traces against four
+metamorphic invariants (KMC-001 through KMC-004). It imports zero kernel code
+and operates solely on `TraceEvent` data.
+
+```bash
+python -m pytest conformance/kmc/test_kmc.py
+```
+
+**14/14** — 6 valid traces + 4 deliberate mutants (teeth checks) + 4 integration.
+
+### 2. Behavioral suite (pytest) — real conformance evidence
+
+`implementations/python/tests/` exercises distinct kernel behavior, including
+the Execution Boundary (`test_exec_does_not_interpret_r2`, verified to fail
+against a kernel that executes R2), snapshot rollback with teeth checks,
+watchdog exhaustion, and YIELD isolation.
+
+```bash
+cd implementations/python && python -m pytest
+```
+
+**15/15** — covers watchdog, YIELD, rollback, R2 opacity, snapshot C12, atomic I/O.
+
+### 3. Normative suite — cross-runtime smoke
+
+`conformance/normative/test_runner.py` runs **14 test cases** (11 core + 3
+watchdog) against each runtime, validated by the KMC oracle when available.
+
+```bash
+python conformance/normative/test_runner.py
+```
+
+**Python:** 14/14 ✅ | **SQLite:** 14/14 ✅
+
+### 4. Compliance Kit — structural validation only
+
+The [Compliance Kit](compliance-kit/) validates that third-party *test
+definitions* are well-formed. It does **not** yet execute implementations;
+runtime conformance is verified by the normative runner and the pytest suite.
+
+```bash
+python compliance-kit/runner/runner.py --implementation /path/to/runtime
+```
 
 See [compliance-kit/README.md](compliance-kit/README.md) for details.
 
@@ -169,18 +199,19 @@ status: active
 | Register | Function | Rule |
 |----------|----------|------|
 | R0 [SESSION] | Session identifier | Generated at BOOT |
-| R1 [WATCHDOG] | Instruction counter | Decremented per operation, extendable via YIELD |
-| R2 [NEXT_ACT] | Next planned action | Defined by agent |
+| R1 [WATCHDOG] | Instruction counter | Decremented **only on EXEC** (§1.1), extendable via YIELD |
+| R2 [NEXT_ACT] | Next planned action | Defined by agent; opaque to kernel (§3.4) |
 | R3 [MODIFIED] | Modified files this session | Delta only |
-| R4 [STDERR] | Structured error output | Written on rollback |
+| R4 [STDERR] | Structured error output | Written on rollback or exhaustion |
 | R5 [ACTIVE_SK] | Active skill | Defined by agent |
 | R6 [HEALTH] | System health | OK or FAIL |
-| R7 [TIMESTAMP] | Session timestamp | Updated at COMMIT |
+| R7 [TIMESTAMP] | Session timestamp | Microsecond granularity (`%Y-%m-%dT%H:%M:%S.%fZ`) |
 
 ---
 
 ## Governance
 
+- [AEP/GOVERNANCE.md](AEP/GOVERNANCE.md) — Promotion criteria (C1–C6) for Active → Stable
 - [ROADMAP.md](ROADMAP.md) — Project roadmap
 - [CHANGELOG.md](CHANGELOG.md) — Version history
 
@@ -198,13 +229,16 @@ MIT
 |-----------|--------|
 | Specification (AEP-0001 to AEP-0007) | Stable |
 | Specification (AEP-0008 Fault Tolerance) | Active |
-| Python Runtime — behavioral tests (pytest) | 13/13 passed |
-| Normative suite | 11 cases × 2 runtimes (pipeline smoke; see Conformance) |
+| Governance (AEP/GOVERNANCE.md) | Active |
+| Python Runtime — behavioral tests (pytest) | 15/15 passed |
+| KMC Behavioral Oracle | 14/14 passed |
+| Normative suite | 14 cases × 2 runtimes (28/28) |
 | Compliance Kit | Structural validation only (does not execute implementations) |
 | Independent Implementations | Seeking contributors |
 
-**Stage: Specification with a validation-rollback execution envelope.** The
-kernel provides a Watchdog Timer and logical validation rollback (see
-AEP-0008, Active). Behavioral conformance is exercised by the pytest suite;
-the normative runner currently performs a pipeline smoke test (see
-[Conformance](#conformance)).
+**Stage: Specification with watchdog and validation-rollback execution envelope.**
+The kernel provides an abstract Watchdog Timer (R1 decrements only on EXEC),
+preventive YIELD extension, immediate exhaustion with `AEP_ERR_WATCHDOG_EXHAUSTION`,
+and logical validation rollback (see AEP-0008, Active). Behavioral conformance
+is exercised by the KMC oracle and the pytest suite; the normative runner
+validates both Python and SQLite at parity.

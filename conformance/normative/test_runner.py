@@ -355,7 +355,7 @@ def generate_report(results: Dict[str, Any]) -> str:
     for test in results.get('results', []):
         status = "PASS" if test.get('passed') else "FAIL"
         kmc_raw = test.get("kmc", {}) or {}
-        kmc_status = "✅" if kmc_raw.get("behavioral_valid", True) else "❌"
+        kmc_status = "[PASS]" if kmc_raw.get("behavioral_valid", True) else "[FAIL]"
         report += f"| {test.get('id')} | {test.get('name')} | {status} | {kmc_status} |\n"
     
     # KMC detail section
