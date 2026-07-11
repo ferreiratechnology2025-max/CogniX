@@ -6,7 +6,7 @@
 
 [![Status: Stable](https://img.shields.io/badge/status-stable-brightgreen)]()
 [![Version: 1.1.0](https://img.shields.io/badge/version-1.1.0-blue)]()
-[![Behavioral tests: 15/15](https://img.shields.io/badge/pytest-15%2F15-brightgreen)]()
+[![Behavioral tests: 23/23](https://img.shields.io/badge/pytest-23%2F23-brightgreen)]()
 [![Normative: 28/28](https://img.shields.io/badge/normative-28%2F28-brightgreen)]()
 [![KMC Oracle: 14/14](https://img.shields.io/badge/kmc-14%2F14-brightgreen)]()
 [![Implementations: 2](https://img.shields.io/badge/implementations-2-blue)]()
@@ -63,7 +63,7 @@ For the pure specification without implementation details, see [AEP/README.md](A
 | Implementation | Status | Conformance | Notes |
 |----------------|--------|-------------|-------|
 | Reference (Markdown) | Stable | N/A — interpreted by LLM, not executable | KOS v6.0 |
-| Python | Stable | **15/15** behavioral (pytest); **14/14** normative; **14/14** KMC oracle | Full watchdog, YIELD, validation rollback |
+| Python | Stable | **23/23** behavioral (pytest); **14/14** normative; **14/14** KMC oracle | Full watchdog, YIELD, validation rollback |
 | SQLite | Stable | **14/14** normative (no behavioral suite yet) | Indexer & complex resource querying |
 
 ---
@@ -121,7 +121,7 @@ watchdog exhaustion, and YIELD isolation.
 cd implementations/python && python -m pytest
 ```
 
-**15/15** — covers watchdog, YIELD, rollback, R2 opacity, snapshot C12, atomic I/O.
+**23/23** — covers watchdog, YIELD, rollback, R2 opacity, snapshot C12, atomic I/O, KOS isolation.
 
 ### 3. Normative suite — cross-runtime smoke
 
@@ -230,7 +230,7 @@ MIT
 | Specification (AEP-0001 to AEP-0007) | Stable |
 | Specification (AEP-0008 Fault Tolerance) | Active |
 | Governance (AEP/GOVERNANCE.md) | Active |
-| Python Runtime — behavioral tests (pytest) | 15/15 passed |
+| Python Runtime — behavioral tests (pytest) | 23/23 passed |
 | KMC Behavioral Oracle | 14/14 passed |
 | Normative suite | 14 cases × 2 runtimes (28/28) |
 | Compliance Kit | Structural validation only (does not execute implementations) |

@@ -9,11 +9,22 @@ from typing import Dict, Any, Optional
 
 
 class StateManager:
-    """Manage AEP state (R0-R7)"""
-    
+    """Manage AEP runtime state (R0-R7).
+
+    The AEP runtime stores its state under ``AEP/runtime_state/state.md``,
+    completely isolated from the KOS meta-kernel state (``KERNEL/STATE.md``).
+    Override with the ``AEP_STATE_PATH`` environment variable for CI/CD
+    sandboxing.
+    """
+
+    DEFAULT_STATE_PATH = "AEP/runtime_state/state.md"
+
     def __init__(self, base_path: str = "."):
         self.base_path = base_path
-        self.state_path = os.path.join(base_path, "KERNEL", "STATE.md")
+        self.state_path = os.environ.get(
+            "AEP_STATE_PATH",
+            os.path.join(base_path, self.DEFAULT_STATE_PATH),
+        )
         self.program_path = os.path.join(base_path, "KERNEL", "PROGRAM.md")
     
     def load_state(self) -> 'State':

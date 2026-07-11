@@ -21,9 +21,7 @@ class TestAEP0008FaultTolerance(unittest.TestCase):
     def setUp(self):
         """Configura ambiente de teste"""
         self.test_dir = tempfile.mkdtemp()
-        self.state_path = os.path.join(self.test_dir, "KERNEL", "STATE.md")
         self.resources_path = os.path.join(self.test_dir, "RESOURCES")
-        os.makedirs(os.path.dirname(self.state_path), exist_ok=True)
         os.makedirs(self.resources_path, exist_ok=True)
 
         self._create_initial_state()
