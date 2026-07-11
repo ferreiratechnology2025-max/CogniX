@@ -1,0 +1,81 @@
+name: AEP Conformance
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+env:
+  PYTHON_VERSION: "3.12"
+  AEP_STATE_PATH: ${{ github.workspace }}/.ci_sandbox/state.md
+  PYTHONPATH: ${{ github.workspace }}/implementations/sqlite
+
+jobs:
+  conformance:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+
+      - name: Install Python runtime
+        working-directory: implementations/python
+        run: pip install -e .
+
+      - name: Install test dependencies
+        run: pip install pytest pyyaml
+
+      - name: Run behavioral tests (Python runtime)
+        working-directory: implementations/python
+        run: python -m pytest -v --tb=short --json-report --json-report-file=../../.ci_sandbox/behavioral-report.json
+        env:
+          AEP_STATE_PATH: ${{ github.workspace }}/.ci_sandbox/state.md
+
+      - name: Run KMC Behavioral Oracle
+        working-directory: conformance/kmc
+        run: python -m pytest -v --tb=short --json-report --json-report-file=../../.ci_sandbox/kmc-report.json
+
+      - name: Run normative suite (Python + SQLite)
+        run: python conformance/normative/test_runner.py --runtime all --report
+        env:
+          AEP_STATE_PATH: ${{ github.workspace }}/.ci_sandbox/state.md
+
+      - name: Archive conformance report
+        uses: actions/upload-artifact@v4
+        with:
+          name: conformance-report
+          path: conformance/conformance-report.md
+          retention-days: 90
+
+      - name: Archive CI sandbox (trace evidence)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-sandbox
+          path: .ci_sandbox/
+          retention-days: 90
+
+      - name: Summarize results
+        run: |
+          echo "## AEP Conformance Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Suite | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+
+          if [ -f .ci_sandbox/behavioral-report.json ]; then
+            TOTAL=$(python3 -c "import json; r=json.load(open('.ci_sandbox/behavioral-report.json')); print(r.get('total', '?'));")
+            PASSED=$(python3 -c "import json; r=json.load(open('.ci_sandbox/behavioral-report.json')); print(r.get('passed', '?'));")
+            echo "| Python behavioral | ${PASSED}/${TOTAL} |" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [ -f .ci_sandbox/kmc-report.json ]; then
+            TOTAL=$(python3 -c "import json; r=json.load(open('.ci_sandbox/kmc-report.json')); print(r.get('total', '?'));")
+            PASSED=$(python3 -c "import json; r=json.load(open('.ci_sandbox/kmc-report.json')); print(r.get('passed', '?'));")
+            echo "| KMC Oracle | ${PASSED}/${TOTAL} |" >> $GITHUB_STEP_SUMMARY
+          fi
