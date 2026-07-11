@@ -61,7 +61,7 @@ State is maintained as eight registers:
 | R4 | BLOCKERS | Current blockers | Updated as needed |
 | R5 | ACTIVE_SK | Active skill | Set by agent |
 | R6 | HEALTH | System health (OK/FAIL) | Updated on VALIDATE |
-| R7 | TIMESTAMP | Session timestamp | Updated on COMMIT |
+| R7 | TIMESTAMP | Session timestamp | Updated on EXEC and COMMIT |
 
 ---
 
@@ -147,11 +147,11 @@ The protocol defines exactly six core opcodes (a seventh, YIELD, is a conditiona
 **Behavior:**
 1. Read R2 [NEXT_ACT] from STATUS
 2. Execute the task
-3. Update R1 [LAST_ACT] with result
+3. Update R1 [LAST_ACT] and R7 [TIMESTAMP]
 
 **Contracts:**
 - Input: R2 [NEXT_ACT]
-- Output: Task executed, R1 updated
+- Output: Task executed, R1/R7 updated
 - Side effects: May modify files
 
 **Rules:**

@@ -115,7 +115,7 @@ class AEPKernelSQLite:
             print(f"  📋 Task: {next_act}")
         
         # Execute task (simulated)
-        state['r1_last_act'] = f"Executed: {next_act}"
+        state['internal_last_action'] = f"Executed: {next_act}"
         state['r7_timestamp'] = datetime.now().isoformat()
         self.state_manager.save_state(state)
         

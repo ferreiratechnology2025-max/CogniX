@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS kernel_state (
     last_result TEXT,
     program TEXT DEFAULT 'padrao',
     r0_session TEXT,
-    r1_last_act TEXT,
+    internal_last_action TEXT,  -- not R1: SQLite does not implement WATCHDOG (see README)
     r2_next_act TEXT,
     r3_modified TEXT,
     r4_blockers TEXT,

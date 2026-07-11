@@ -46,7 +46,7 @@ State is maintained as eight registers (R0-R7):
 | R4 | BLOCKERS | Current blockers | Updated as needed |
 | R5 | ACTIVE_SK | Active skill | Set by agent |
 | R6 | HEALTH | System health | Updated on VALIDATE |
-| R7 | TIMESTAMP | Session timestamp | Updated on COMMIT |
+| R7 | TIMESTAMP | Session timestamp | Updated on EXEC and COMMIT |
 
 **Rules:**
 - R3 MUST contain ONLY the delta of the current session

@@ -26,7 +26,7 @@ class StateManager:
         """Save state"""
         fields = [
             'active_project', 'active_status', 'session', 'last_run',
-            'last_result', 'program', 'r0_session', 'r1_last_act',
+            'last_result', 'program', 'r0_session', 'internal_last_action',
             'r2_next_act', 'r3_modified', 'r4_blockers', 'r5_active_sk',
             'r6_health', 'r7_timestamp', 'updated_at'
         ]
@@ -49,7 +49,6 @@ class StateManager:
         state = self.get_state()
         reg_map = {
             'R0': 'r0_session',
-            'R1': 'r1_last_act',
             'R2': 'r2_next_act',
             'R3': 'r3_modified',
             'R4': 'r4_blockers',
@@ -63,7 +62,6 @@ class StateManager:
         """Set a register value"""
         reg_map = {
             'R0': 'r0_session',
-            'R1': 'r1_last_act',
             'R2': 'r2_next_act',
             'R3': 'r3_modified',
             'R4': 'r4_blockers',

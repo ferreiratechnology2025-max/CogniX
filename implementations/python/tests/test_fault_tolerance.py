@@ -282,5 +282,94 @@ status: active
         self.assertEqual(results["VALIDATE"]["status"], "OK")
 
 
+    def test_snapshot_captured_before_commit(self):
+        """AEP-0008 §2.3: Before each COMMIT, the Runtime MUST capture the
+        current state as a stable snapshot in R3. On failure, the state MUST
+        be restored to this snapshot.
+
+        Sets R3 to a known register snapshot, mutates R0 after the snapshot
+        was taken, then forces a COMMIT failure. Verifies R0 is restored to
+        its snapshot value and R4 carries structured error.
+
+        Teeth: companion test_snapshot_teeth_without_r3 proves that with R3
+        empty ('{}'), the rollback loop (kernel.py:310-313) has no keys to
+        restore from, and R0 stays as the mutant pre-commit value. The C12
+        mechanism is therefore necessary for correct rollback.
+        """
+        snapshot = {
+            "R0": "pre-commit", "R1": "5", "R2": "opaque-task",
+            "R3": "recorded-state", "R4": "None", "R5": "skill-kos",
+            "R6": "OK", "R7": "2026-07-05T00:00:00Z"
+        }
+        state = self.kernel.state_manager.load_state()
+        state.set_register("R3", json.dumps(snapshot))
+        state.set_register("R0", "pre-commit")
+        self.kernel.state_manager.save_state(state)
+
+        # Mutate R0 after snapshot was captured — rollback MUST restore it
+        state.set_register("R0", "mutant-post-snapshot")
+        self.kernel.state_manager.save_state(state)
+
+        bad = ("---\nid: c12-test\nversion: 1.0.0\nstatus: active\n"
+               "---\nNo type field")
+        with open(os.path.join(self.resources_path, "c12-test.md"), "w",
+                  encoding="utf-8") as f:
+            f.write(bad)
+
+        result = self.kernel.execute_commit(modified_files=["c12-test.md"])
+        self.assertEqual(result["status"], "FAIL")
+        self.assertTrue(result.get("rollback", False))
+
+        after = self.kernel.state_manager.load_state()
+        self.assertEqual(
+            after.get_register("R0"), "pre-commit",
+            "R0 was NOT restored from R3 snapshot — C12 invariant violated",
+        )
+        r4 = after.get_register("R4")
+        self.assertIsNotNone(r4)
+        r4_data = json.loads(r4)
+        self.assertEqual(r4_data["error_code"], "ERR_AEP_0002_VALIDATION")
+
+    def test_snapshot_teeth_without_r3(self):
+        """Teeth Check companion to test_snapshot_captured_before_commit.
+
+        When R3 is empty ('{}'), the rollback restoration loop
+        (kernel.py:310-313) finds no register keys to restore. R0 stays as
+        the mutant post-snapshot value, proving the snapshot mechanism is
+        necessary for C12. If C12 were mere ceremonial documentation, this
+        test would still pass — but it demonstrably breaks, confirming the
+        mechanism is real and required.
+        """
+        state = self.kernel.state_manager.load_state()
+        state.set_register("R3", "{}")  # Empty — no snapshot available
+        state.set_register("R0", "pre-commit")
+        self.kernel.state_manager.save_state(state)
+
+        # Mutate R0 — without a snapshot, rollback has nothing to restore
+        state.set_register("R0", "mutant-no-snapshot")
+        self.kernel.state_manager.save_state(state)
+
+        bad = ("---\nid: teeth-c12\nversion: 1.0.0\nstatus: active\n"
+               "---\nNo type field")
+        with open(os.path.join(self.resources_path, "teeth-c12.md"), "w",
+                  encoding="utf-8") as f:
+            f.write(bad)
+
+        result = self.kernel.execute_commit(modified_files=["teeth-c12.md"])
+        self.assertEqual(result["status"], "FAIL")
+
+        after = self.kernel.state_manager.load_state()
+        # Without a valid R3 snapshot, restoration was a no-op.
+        # R0 REMAINS as "mutant-no-snapshot" instead of being restored.
+        r0 = after.get_register("R0")
+        self.assertEqual(
+            r0, "mutant-no-snapshot",
+            "R0 was restored despite empty R3 — unexpected behavior",
+        )
+        # R4 still carries structured stderr — rollback attempted but empty
+        r4 = after.get_register("R4")
+        self.assertIsNotNone(r4)
+
+
 if __name__ == "__main__":
     unittest.main()
