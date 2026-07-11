@@ -49,8 +49,8 @@ class TestAEP0008FaultTolerance(unittest.TestCase):
         manager = StateManager(self.test_dir)
         manager.save_state(state)
 
-    def test_watchdog_decrement_on_load(self):
-        """Testa que LOAD decrementa o Watchdog"""
+    def test_watchdog_no_decrement_on_load(self):
+        """AEP-0008 §1.1: LOAD NÃO decrementa o Watchdog"""
         # Cria um resource válido para load
         resource_content = """---
 type: project
@@ -65,17 +65,18 @@ status: active
 
         result = self.kernel.load("test-resource")
         self.assertEqual(result["status"], "OK")
-        self.assertEqual(result["watchdog_remaining"], 4)
+        self.assertEqual(result["watchdog_remaining"], 5)
 
-    def test_watchdog_timeout_on_expired(self):
-        """Testa que operações falham com Watchdog expirado"""
+    def test_watchdog_exhaustion_on_expired(self):
+        """AEP-0008 §1.3: operações em R1=0 retornam AEP_ERR_WATCHDOG_EXHAUSTION"""
         state = self.kernel.state_manager.load_state()
         state.set_register("R1", "0")
         self.kernel.state_manager.save_state(state)
 
         result = self.kernel.load("nonexistent")
         self.assertEqual(result["status"], "FAIL")
-        self.assertIn("Watchdog timer expired", result["error"])
+        self.assertEqual(result.get("error_code"), "AEP_ERR_WATCHDOG_EXHAUSTION")
+        self.assertTrue(result.get("rollback", False))
 
     def test_yield_extension(self):
         """Testa que YIELD estende o Watchdog"""

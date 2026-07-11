@@ -1,0 +1,23 @@
+id: TC-WD-002
+name: Preventive YIELD Avoids Exhaustion
+description: >
+  AEP-0008 §1.2: YIELD MUST be called BEFORE the EXEC that would exhaust R1.
+  When R1=1 and YIELD is emitted first, the runtime extends R1 and the
+  subsequent EXEC succeeds.
+  BOOT (R1=1) -> YIELD (1->N) -> EXEC (N->N-1, succeeds)
+
+kmc:
+  r1_initial: 1
+
+preconditions:
+  - R1 initialised to 1
+
+procedure:
+  - BOOT (R1=1)
+  - YIELD (extends R1, preventing exhaustion)
+  - EXEC (succeeds with R1 > 0)
+
+expected:
+  status: "OK"
+
+tags: [watchdog, yield, preventive, aep-0008]

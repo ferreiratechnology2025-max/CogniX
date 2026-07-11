@@ -1,0 +1,24 @@
+id: TC-WD-001
+name: Watchdog Exhaustion Isolation
+description: >
+  Validate that R1 [WATCHDOG] decrements only on EXEC.
+  BOOT (R1=2) -> EXEC (2->1) -> EXEC (1->0) -> EXEC (R1=0 blocked)
+  Third EXEC triggers AEP_ERR_WATCHDOG_EXHAUSTION with rollback.
+
+kmc:
+  r1_initial: 2
+
+preconditions:
+  - R1 initialised to 2
+
+procedure:
+  - BOOT (R1=2)
+  - EXEC (R1: 2->1)
+  - EXEC (R1: 1->0)
+  - EXEC (R1=0 -> exhaustion fault)
+
+expected:
+  status: FAIL
+  exit_code: 1
+
+tags: [watchdog, exhaustion, isolation, aep-0008]

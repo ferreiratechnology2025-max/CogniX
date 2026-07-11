@@ -1,8 +1,8 @@
 # AEP-0008: Execution Guarantees, Fault Tolerance and Recovery
 
 **Status:** Active
-**Version:** 1.0.0
-**Date:** 2026-07-05
+**Version:** 1.1.0
+**Date:** 2026-07-11
 
 ---
 
@@ -15,53 +15,64 @@ interpreted as described in RFC 2119.
 ## 0.1 Scope
 
 This specification covers **logical validation failures**: the detection of an
-invalid state mutation at COMMIT and the deterministic rollback that follows.
+invalid state mutation at COMMIT and the deterministic rollback that follows,
+as well as **watchdog exhaustion**: the detection of instruction-cycle
+depletion and the structured recovery that follows.
+
 Process crashes, write-ahead logging, and durability are **out of scope**; see
 the Security Considerations in AEP-0001 and the version-control delegation
 model. The kernel does not guarantee recovery from a process that is killed
-mid-transaction — it guarantees that a *validated* transaction is applied and an
-*invalid* one is rolled back within a running process.
+mid-transaction — it guarantees that a *validated* transaction is applied, an
+*invalid* one is rolled back, and an *exhausted* instruction budget is
+reported, all within a running process.
 
 ---
 
 ## 1. The Abstract Watchdog Timer (Register R1)
 
-Register R1 acts as the strict instruction counter (Instruction Counter /
-Quantum). Each `EXEC` cycle consumes exactly one unit of R1.
+Register R1 [WATCHDOG] acts as the strict instruction counter. Each EXEC
+cycle consumes exactly one unit of R1.
 
-### 1.1 The YIELD Instruction
+### 1.1 Decrement Rule
+
+R1 [WATCHDOG] MUST decrement by exactly one unit at the immediate start of
+the EXEC phase of any opcode, before any semantic side-effects of that opcode
+are evaluated. No other phase (BOOT, LOAD, VALIDATE, COMMIT, ROLLBACK, EXIT)
+SHALL decrement R1.
+
+### 1.2 The YIELD Instruction
 
 If the agent determines that the computational complexity of a task requires
-more cycles than the current R1 ceiling, it MUST emit the `YIELD` opcode before
-`R1 == 0`.
+more cycles than the current R1 ceiling, it MUST emit the `YIELD` opcode
+before `R1 == 0`.
 
 ```yaml
-# Syntax
 instruction: YIELD
 payload:
   reason: "Descriptive string explaining the extension"
-  requested_cycles: Integer (Max: 10)
+  requested_cycles: Integer
 ```
 
-### 1.2 Usage Example
+### 1.3 The R1 == 0 Edge Case (Rescue Path)
 
-```python
-# Request a 3-cycle extension for complex processing
-result = kernel.yield_cycles(
-    reason="Validating complex dependency graph",
-    requested_cycles=3
-)
-```
+When `R1 == 1` and the next opcode is a valid `YIELD`, R1 MUST decrement to
+`0` during the preceding EXEC. The Runtime MUST evaluate the `YIELD` opcode at
+`R1 == 0` before triggering an exhaustion fault. If approved, the extension
+MUST be applied immediately within the same execution step, rescuing the
+Runtime from interruption.
 
-### 1.3 Limits
+If the next opcode at `R1 == 0` is NOT `YIELD`, an immediate exhaustion fault
+MUST be triggered: the Runtime SHALL invoke a mandatory rollback, write
+`AEP_ERR_WATCHDOG_EXHAUSTION` into R4, and terminate with `exit 1`.
 
-- Maximum cycles per YIELD: **10**. A YIELD requesting more than 10 MUST be
-  refused.
-- Global cycle limit: **20** (configurable via `max_watchdog_cycles`). A YIELD
-  that would exceed the global limit MUST be refused.
-- YIELD history MUST be retained for auditing.
+### 1.4 Extension Capacity — Policy, Not Protocol
 
-### 1.4 YIELD — Conditional Requirement
+The specification does NOT dictate hardcoded cycle limits for YIELD. The
+Runtime MUST enforce an implementation-defined maximum extension capacity and
+expose its watchdog scaling policies independently. YIELD history MUST be
+retained for auditing.
+
+### 1.5 YIELD — Conditional Requirement
 
 YIELD is a conditional extension opcode defined by this specification. It is
 NOT part of the six-opcode core ISA (AEP-0001 §6).
@@ -90,18 +101,26 @@ If validation fails, the Runtime MUST perform the following steps, in order:
 2. **Stderr injection:** The Runtime MUST write a structured error into R4.
 3. **Self-correction loop:** The agent reads R4 on the next cycle and corrects.
 
-### 2.2 R4 Stderr Example
+### 2.2 Watchdog Exhaustion Rollback
+
+Watchdog exhaustion is a critical transaction failure. The Runtime MUST
+intercept the fault, invoke a mandatory rollback using its internal memory
+snapshot, preserve `R0`, `R3` (delta-only), and `R7` intact for post-mortem
+audits, populate `R4` with the error structure containing
+`AEP_ERR_WATCHDOG_EXHAUSTION`, and terminate with `exit 1`.
+
+### 2.3 R4 Stderr Example
 
 ```json
 {
   "timestamp": "2026-07-05T01:18:03Z",
-  "error_code": "ERR_AEP_0002_DANGLING_DEP",
-  "trace": "Resource 'incident-04' has dangling dependency: 'nonexistent-resource'",
-  "watchdog_at_failure": 2
+  "error_code": "AEP_ERR_WATCHDOG_EXHAUSTION",
+  "trace": "Watchdog exhausted at cycle 3",
+  "watchdog_at_failure": 0
 }
 ```
 
-### 2.3 Stable Snapshot (R3)
+### 2.4 Stable Snapshot (R3)
 
 Before each COMMIT, the Runtime MUST capture the current state as a stable
 snapshot in R3. On failure, the state MUST be restored to this snapshot.
@@ -118,9 +137,13 @@ all codes are registered in this table regardless of origin.
 | ERR_AEP_0002_VALIDATION | Resource validation failed |
 | ERR_AEP_0003_E001 | Resource not found |
 | ERR_AEP_0003_E002 | Dependency not found |
-| ERR_AEP_0003_E003 | Invalid resource id: not a plain identifier; rejected before path resolution |
-| ERR_AEP_0008_TIMEOUT | Watchdog expired |
+| ERR_AEP_0003_E003 | Invalid resource id: not a plain identifier |
+| **AEP_ERR_WATCHDOG_EXHAUSTION** | Watchdog exhausted — instruction budget depleted |
 | ERR_SYSTEM_UNEXPECTED | Unexpected system failure |
+
+The runtime MUST write the protocol-level string `AEP_ERR_WATCHDOG_EXHAUSTION`
+into R4 upon exhaustion. The runtime MUST NOT reference testing-framework
+error codes (e.g., `KMC-001`) in its output.
 
 ---
 
@@ -128,8 +151,8 @@ all codes are registered in this table regardless of origin.
 
 ```
 BOOT → YIELD? → LOAD → VALIDATE → EXEC → COMMIT → EXIT
-                  ↑                   ↓
-                  └── Watchdog > 0 ───┘
+                  ↑                   │
+                  └── R1 > 0 ─────────┘
                         ↓ (if == 0)
                     YIELD or HALT
 ```
@@ -147,7 +170,8 @@ BOOT → YIELD? → LOAD → VALIDATE → EXEC → COMMIT → EXIT
 
 ## 5. Reference Implementation
 
-See `implementations/python/aep/core/kernel.py` for the complete implementation.
+See `implementations/python/aep/core/kernel.py` for the reference
+implementation.
 
 ### 5.1 Main Methods
 

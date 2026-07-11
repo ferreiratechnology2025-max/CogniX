@@ -49,6 +49,7 @@ class StateManager:
         state = self.get_state()
         reg_map = {
             'R0': 'r0_session',
+            'R1': 'internal_last_action',
             'R2': 'r2_next_act',
             'R3': 'r3_modified',
             'R4': 'r4_blockers',
@@ -62,6 +63,7 @@ class StateManager:
         """Set a register value"""
         reg_map = {
             'R0': 'r0_session',
+            'R1': 'internal_last_action',
             'R2': 'r2_next_act',
             'R3': 'r3_modified',
             'R4': 'r4_blockers',

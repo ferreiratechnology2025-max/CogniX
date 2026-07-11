@@ -1,0 +1,24 @@
+id: TC-WD-003
+name: Watchdog Exhaustion Rollback State Preservation
+description: >
+  Validate that the second EXEC (R1: 1->0) triggers immediate exhaustion
+  within itself — no side effects, no next opcode reached. Rollback
+  preserves R0, R3, R7 from the pre-exhaustion snapshot.
+  BOOT (R1=2) -> EXEC (2->1) -> EXEC (1->0, exhaustion immediate)
+
+kmc:
+  r1_initial: 2
+
+preconditions:
+  - R1 initialised to 2
+
+procedure:
+  - BOOT (R1=2)
+  - EXEC (R1: 2->1, mutates internal state)
+  - EXEC (R1: 1->0, exhaustion triggered immediately, R4 = AEP_ERR_WATCHDOG_EXHAUSTION)
+
+expected:
+  status: FAIL
+  exit_code: 1
+
+tags: [watchdog, exhaustion, rollback, aep-0008]

@@ -86,6 +86,11 @@ class Database:
         if self.conn:
             self.conn.commit()
     
+    def rollback(self):
+        """Rollback current transaction"""
+        if self.conn:
+            self.conn.rollback()
+
     def close(self):
         """Close connection"""
         if self.conn:

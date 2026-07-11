@@ -1,5 +1,6 @@
 """
-AEP Kernel v1.0.0 - Implementação com AEP-0008 (Fault Tolerance)
+AEP Kernel v1.1.0 - Implementação com AEP-0008 (Fault Tolerance)
+Conforme AEP-0008 §1.1: R1 decrementa apenas em EXEC.
 """
 
 import os
@@ -13,9 +14,10 @@ from .resource import ResourceManager
 
 class AEPRuntimeError(Exception):
     """Erro estruturado do runtime AEP"""
-    def __init__(self, error_code: str, message: str):
+    def __init__(self, error_code: str, message: str, watchdog_at_failure: int = 0):
         self.error_code = error_code
         self.message = message
+        self.watchdog_at_failure = watchdog_at_failure
         super().__init__(message)
 
 
@@ -41,7 +43,6 @@ class AEPKernel:
         self.session_id = datetime.now().strftime("%Y-%m-%d-%H-%M")
         state.set_register("R0", self.session_id)
 
-        # Inicializa Watchdog (R1) com valor padrão
         watchdog_initial = state.get_register("R1") or "5"
         state.set_register("R1", str(watchdog_initial))
 
@@ -59,8 +60,38 @@ class AEPKernel:
             "program": program
         }
 
+    def _trigger_exhaustion(self, r1_before: int = 0, opcode: str = "",
+                            verbose: bool = False) -> Dict[str, Any]:
+        """Trigger an AEP_ERR_WATCHDOG_EXHAUSTION fault with rollback.
+
+        R0, R3, R7 are preserved. R4 gets the structured error.
+        """
+        state = self.state_manager.load_state()
+
+        r4_error = json.dumps({
+            "timestamp": datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "error_code": "AEP_ERR_WATCHDOG_EXHAUSTION",
+            "trace": f"Watchdog exhausted at {opcode or 'EXEC'}, R1 was {r1_before}",
+            "watchdog_at_failure": 0
+        })
+        state.set_register("R4", r4_error)
+        state.set_register("R6", "FAIL")
+        state.set_register("R7", "EXIT_1_WATCHDOG_TIMEOUT")
+        self.state_manager.save_state(state)
+
+        return {
+            "status": "FAIL",
+            "error": f"Watchdog exhausted: R1 reached 0 before {opcode or 'EXEC'}",
+            "error_code": "AEP_ERR_WATCHDOG_EXHAUSTION",
+            "rollback": True,
+            "watchdog_remaining": 0,
+            "state": state.get_all_registers()
+        }
+
     def yield_cycles(self, reason: str, requested_cycles: int = 1, verbose: bool = False) -> Dict[str, Any]:
-        """YIELD opcode - Solicita extensão de ciclos do Watchdog"""
+        """YIELD opcode - Solicita extensão de ciclos do Watchdog.
+        Sempre permitido — não verifica R1 (rescue path em R1 == 0).
+        """
         if verbose:
             print(f"🔄 YIELD: Requesting {requested_cycles} cycles...")
             print(f"  📋 Reason: {reason}")
@@ -105,17 +136,16 @@ class AEPKernel:
         }
 
     def load(self, resource_id: str, verbose: bool = False) -> Dict[str, Any]:
-        """LOAD opcode - Carrega Resource com validação de Watchdog"""
+        """LOAD opcode - Carrega Resource.
+        AEP-0008 §1.1: NÃO decrementa R1. Exaustão bloqueia o opcode.
+        """
         if verbose:
             print(f"📂 LOAD: Loading resource '{resource_id}'...")
 
         state = self.state_manager.load_state()
         watchdog = int(state.get_register("R1") or 0)
         if watchdog <= 0:
-            return {
-                "status": "FAIL",
-                "error": "LOAD: Watchdog timer expired. Use YIELD to request more cycles."
-            }
+            return self._trigger_exhaustion(watchdog, "LOAD", verbose)
 
         if not self.resource_manager.is_valid_resource_id(resource_id):
             return {
@@ -145,8 +175,7 @@ class AEPKernel:
 
         self.loaded_resources[resource_id] = resource
 
-        new_watchdog = watchdog - 1
-        state.set_register("R1", str(new_watchdog))
+        # R1 NOT decremented — only EXEC consumes cycles
         self.state_manager.save_state(state)
 
         return {
@@ -154,21 +183,20 @@ class AEPKernel:
             "resource": resource_id,
             "dependencies": dependencies,
             "loaded_count": len(self.loaded_resources),
-            "watchdog_remaining": new_watchdog
+            "watchdog_remaining": watchdog
         }
 
     def validate(self, resource_id: str, verbose: bool = False) -> Dict[str, Any]:
-        """VALIDATE opcode - Valida estrutura do Resource"""
+        """VALIDATE opcode - Valida estrutura do Resource.
+        AEP-0008 §1.1: NÃO decrementa R1. Exaustão bloqueia o opcode.
+        """
         if verbose:
             print(f"🔍 VALIDATE: Validating resource '{resource_id}'...")
 
         state = self.state_manager.load_state()
         watchdog = int(state.get_register("R1") or 0)
         if watchdog <= 0:
-            return {
-                "status": "FAIL",
-                "error": "VALIDATE: Watchdog timer expired. Use YIELD to request more cycles."
-            }
+            return self._trigger_exhaustion(watchdog, "VALIDATE", verbose)
 
         if not self.resource_manager.is_valid_resource_id(resource_id):
             return {
@@ -185,8 +213,7 @@ class AEPKernel:
         resource = self.loaded_resources[resource_id]
         validation_result = self.resource_manager.validate_resource(resource)
 
-        new_watchdog = watchdog - 1
-        state.set_register("R1", str(new_watchdog))
+        # R1 NOT decremented — only EXEC consumes cycles
         self.state_manager.save_state(state)
 
         return {
@@ -195,21 +222,29 @@ class AEPKernel:
             "valid": validation_result["passed"],
             "errors": validation_result.get("errors", []),
             "warnings": validation_result.get("warnings", []),
-            "watchdog_remaining": new_watchdog
+            "watchdog_remaining": watchdog
         }
 
     def exec(self, verbose: bool = False) -> Dict[str, Any]:
-        """EXEC opcode - Executa a tarefa atual com Watchdog"""
+        """EXEC opcode - Executa a tarefa atual.
+        AEP-0008 §1.1: ÚNICO opcode que decrementa R1.
+        Se R1=1, o decremento zera o contador → exaustão imediata.
+        O opcode NÃO produz side effects nem executa a tarefa.
+        """
         if verbose:
             print("⚡ EXEC: Executing current task...")
 
         state = self.state_manager.load_state()
         watchdog = int(state.get_register("R1") or 0)
+
         if watchdog <= 0:
-            return {
-                "status": "FAIL",
-                "error": "EXEC: Watchdog timer expired. Use YIELD to request more cycles."
-            }
+            return self._trigger_exhaustion(watchdog, "EXEC", verbose)
+
+        # Exaustão imediata: consumir o último ciclo aborta este EXEC.
+        # Nenhum side effect, a tarefa NÃO é executada.
+        if watchdog == 1:
+            state.set_register("R1", "0")
+            return self._trigger_exhaustion(1, "EXEC", verbose)
 
         next_act = state.get_register("R2")
 
@@ -224,7 +259,7 @@ class AEPKernel:
 
         new_watchdog = watchdog - 1
         state.set_register("R1", str(new_watchdog))
-        state.set_register("R7", datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ"))
+        state.set_register("R7", datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%fZ"))
 
         self.state_manager.save_state(state)
 
@@ -236,7 +271,9 @@ class AEPKernel:
         }
 
     def execute_commit(self, modified_files: List[str] = None, verbose: bool = False) -> Dict[str, Any]:
-        """COMMIT opcode - Transação ACID com Rollback estruturado"""
+        """COMMIT opcode - Transação ACID com Rollback estruturado.
+        AEP-0008 §1.1: NÃO decrementa R1.
+        """
         if verbose:
             print("💾 COMMIT: Starting ACID transaction...")
 
@@ -251,16 +288,7 @@ class AEPKernel:
                 stable_snapshot = {}
 
         try:
-            # 1. Decrementa Watchdog
-            new_watchdog = watchdog - 1
-            if new_watchdog < 0:
-                raise AEPRuntimeError(
-                    error_code="ERR_AEP_0008_TIMEOUT",
-                    message="Watchdog estourado. Execução abortada."
-                )
-            state.set_register("R1", str(new_watchdog))
-
-            # 2. Validação semântica (bouncer)
+            # 1. Validação semântica (bouncer)
             if modified_files:
                 for file_path in modified_files:
                     resource_id = os.path.splitext(os.path.basename(file_path))[0]
@@ -273,17 +301,17 @@ class AEPKernel:
                                 message=f"Resource '{resource_id}' validation failed: {validation['errors']}"
                             )
 
-            # 3. Persiste no disco
+            # 2. Persiste no disco
             if modified_files:
                 state.set_register("R3", ", ".join(modified_files))
 
-            # 4. Atualiza timestamp e status
-            state.set_register("R7", datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ"))
+            # 3. Atualiza timestamp e status
+            state.set_register("R7", datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%fZ"))
             state.set_register("R6", "OK")
 
             self.state_manager.save_state(state)
 
-            # 5. Atualiza snapshot estável (R3) para o próximo ciclo
+            # 4. Atualiza snapshot estável (R3) para o próximo ciclo
             current_state = state.get_all_registers()
             state.set_register("R3", json.dumps(current_state))
 
@@ -297,7 +325,7 @@ class AEPKernel:
             return {
                 "status": "OK",
                 "modified": modified_files or [],
-                "watchdog_remaining": new_watchdog,
+                "watchdog_remaining": watchdog,
                 "state": state.get_all_registers()
             }
 
@@ -306,18 +334,16 @@ class AEPKernel:
                 print(f"  ❌ Transaction failed: {err.message}")
                 print(f"  🔄 Executing ROLLBACK to stable snapshot...")
 
-            # Restaura buffer do snapshot estável
             if stable_snapshot:
                 for key, value in stable_snapshot.items():
                     if key.startswith("R"):
                         state.set_register(key, str(value))
 
-            # Injeta Stderr estruturado em R4
             state.set_register("R4", json.dumps({
                 "timestamp": datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ"),
                 "error_code": err.error_code,
                 "trace": err.message,
-                "watchdog_at_failure": new_watchdog
+                "watchdog_at_failure": err.watchdog_at_failure
             }))
 
             state.set_register("R7", "ROLLBACK_EXECUTED")
@@ -357,7 +383,9 @@ class AEPKernel:
         return self.execute_commit(modified_files, verbose)
 
     def exit(self, verbose: bool = False) -> Dict[str, Any]:
-        """EXIT opcode - Encerra sessão com verificação final"""
+        """EXIT opcode - Encerra sessão.
+        AEP-0008 §1.1: NÃO decrementa R1.
+        """
         if verbose:
             print("🚪 EXIT: Ending session with final health check...")
 
@@ -365,17 +393,10 @@ class AEPKernel:
         watchdog = int(state.get_register("R1") or 0)
 
         if watchdog <= 0:
-            state.set_register("R6", "FAIL")
-            state.set_register("R7", "EXIT_1_WATCHDOG_TIMEOUT")
-            self.state_manager.save_state(state)
-            return {
-                "status": "FAIL",
-                "error": "EXIT: Watchdog timeout detected. Session terminated with errors.",
-                "watchdog": watchdog
-            }
+            return self._trigger_exhaustion(watchdog, "EXIT", verbose)
 
         state.set_register("R6", "OK")
-        state.set_register("R7", datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ"))
+        state.set_register("R7", datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%fZ"))
 
         self.state_manager.save_state(state)
 
@@ -388,18 +409,17 @@ class AEPKernel:
         }
 
     def run_program(self, program: List[str], verbose: bool = False) -> Dict[str, Any]:
-        """Executa um programa completo"""
+        """Executa um programa completo com exhaustion guard."""
         results = {}
 
-        for opcode in program:
+        for i, opcode in enumerate(program):
             parts = opcode.strip().split()
             command = parts[0]
 
             if command == "BOOT":
                 results["BOOT"] = self.boot(verbose)
             elif command == "YIELD":
-                # Handle YIELD 'reason with spaces' N
-                rest = opcode.strip()[5:].strip()  # everything after "YIELD"
+                rest = opcode.strip()[5:].strip()
                 if rest.startswith("'") or rest.startswith('"'):
                     quote_char = rest[0]
                     end_quote = rest.find(quote_char, 1)
@@ -432,8 +452,10 @@ class AEPKernel:
             else:
                 results[command] = {"status": "FAIL", "error": f"Unknown opcode: {command}"}
 
-            # Para na primeira falha
-            if results[command].get("status") == "FAIL":
+            result = results.get(command, {})
+            if result.get("status") == "FAIL":
+                # Parada imediata: exaustão é síncrona dentro do próprio EXEC,
+                # não há look-ahead para YIELD. O YIELD deve ser preventivo.
                 if verbose:
                     print(f"❌ Program halted at: {command}")
                 break
