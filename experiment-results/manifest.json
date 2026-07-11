@@ -23,6 +23,7 @@
     "thinking": "adaptive",
     "sampling": "n/a — temperature/top_p/top_k removed on claude-opus-4-8; default sampling",
     "context": "input-coder.md as sole user message; no system prompt additions; account memory disabled/absent (raw API call)",
-    "script_sha256": "628f70ec449266e51457f149f9ae7345dc95a95f8befa5260eab4e37287dfd16"
+    "script_sha256": "6f169f47b0239d1c0fe5c7bc28ad3732b2fe2be86d3d6679afcb9b00c60f4b95",
+    "transport_retry_policy": "Pre-registered before Phase 2: a generated plan is data and is never retried. A transport failure with no content (network error, timeout, 5xx/529) is retried up to 3x, each attempt logged with its reason. Any HTTP error with a structured API error body (4xx) is final."
   }
 }
