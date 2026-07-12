@@ -9,7 +9,7 @@ on:
 env:
   PYTHON_VERSION: "3.12"
   AEP_STATE_PATH: ${{ github.workspace }}/.ci_sandbox/state.md
-  PYTHONPATH: ${{ github.workspace }}/implementations/sqlite
+  PYTHONPATH: ${{ github.workspace }}/implementations/python:${{ github.workspace }}/implementations/sqlite
 
 jobs:
   conformance:

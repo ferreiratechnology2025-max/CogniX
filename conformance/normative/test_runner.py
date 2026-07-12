@@ -169,6 +169,10 @@ class AEPTestRunner:
         kmc_tracer = importlib.import_module("conformance.kmc.tracer")
         KMCOracle = kmc_oracle.KMCOracle
         KernelTracer = kmc_tracer.KernelTracer
+        # Ensure the Python implementation path is on sys.path for aep imports
+        _aep_path = str(self.base_path / "implementations" / "python")
+        if _aep_path not in sys.path:
+            sys.path.insert(0, _aep_path)
         from aep.core.kernel import AEPKernel
 
         test_id = test_data.get("id", "unknown")
