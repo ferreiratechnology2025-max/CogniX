@@ -31,6 +31,9 @@ class TestKOSIsolation(unittest.TestCase):
         self.kos_state_path = os.path.join(self.test_dir, self.KOS_STATE_PATH)
         os.makedirs(self.resources_path, exist_ok=True)
 
+        # Salvar e limpar AEP_STATE_PATH para que StateManager use o test_dir
+        self._old_aep_state_path = os.environ.pop("AEP_STATE_PATH", None)
+
         self._create_valid_aep_state()
         self.kernel = AEPKernel(self.test_dir)
 
@@ -52,6 +55,10 @@ class TestKOSIsolation(unittest.TestCase):
 
         manager = StateManager(self.test_dir)
         manager.save_state(state)
+
+    def tearDown(self):
+        if self._old_aep_state_path is not None:
+            os.environ["AEP_STATE_PATH"] = self._old_aep_state_path
 
     def _corrupt_kos_state(self, content: str):
         """Escreve lixo no KERNEL/STATE.md do KOS"""
