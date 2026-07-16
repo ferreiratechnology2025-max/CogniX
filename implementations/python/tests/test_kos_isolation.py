@@ -31,7 +31,7 @@ class TestKOSIsolation(unittest.TestCase):
         self.kos_state_path = os.path.join(self.test_dir, self.KOS_STATE_PATH)
         os.makedirs(self.resources_path, exist_ok=True)
 
-        # Salvar e limpar AEP_STATE_PATH para que StateManager use o test_dir
+        # Clear AEP_STATE_PATH so StateManager derives path from test_dir
         self._old_aep_state_path = os.environ.pop("AEP_STATE_PATH", None)
 
         self._create_valid_aep_state()
