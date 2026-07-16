@@ -8,7 +8,7 @@ on:
 
 env:
   PYTHON_VERSION: "3.12"
-  AEP_STATE_PATH: ${{ github.workspace }}/.ci_sandbox/state.md
+  AEP_STATE_PATH: ${{ github.workspace }}/.ci_sandbox/AEP/state.md
   PYTHONPATH: ${{ github.workspace }}/implementations/python:${{ github.workspace }}/implementations/sqlite
 
 jobs:
@@ -36,7 +36,7 @@ jobs:
         working-directory: implementations/python
         run: python -m pytest -v --tb=short --json-report --json-report-file=../../.ci_sandbox/behavioral-report.json
         env:
-          AEP_STATE_PATH: ${{ github.workspace }}/.ci_sandbox/state.md
+          AEP_STATE_PATH: ${{ github.workspace }}/.ci_sandbox/AEP/state.md
 
       - name: Run KMC Behavioral Oracle
         working-directory: conformance/kmc
@@ -45,7 +45,7 @@ jobs:
       - name: Run normative suite (Python + SQLite)
         run: python conformance/normative/test_runner.py --runtime all --report
         env:
-          AEP_STATE_PATH: ${{ github.workspace }}/.ci_sandbox/state.md
+          AEP_STATE_PATH: ${{ github.workspace }}/.ci_sandbox/AEP/state.md
 
       - name: Archive conformance report
         uses: actions/upload-artifact@v4
